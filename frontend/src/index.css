@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply font-sans text-school-grey-800 antialiased;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-university-red text-white px-6 py-3 rounded-xl font-semibold 
+           transition-all duration-300 hover:bg-university-red-700 
+           hover:shadow-lg active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-university-red border-2 border-university-red 
+           px-6 py-3 rounded-xl font-semibold transition-all duration-300 
+           hover:bg-university-red hover:text-white active:scale-95;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card p-6 transition-all duration-300 
+           hover:shadow-card-hover;
+  }
+
+  .section-title {
+    @apply text-3xl md:text-4xl font-display font-bold text-school-grey-800;
+  }
+
+  .section-subtitle {
+    @apply text-lg text-school-grey-500 mt-2;
+  }
+
+  .nav-link {
+    @apply text-school-grey-700 hover:text-university-red font-medium 
+           transition-colors duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-school-grey-200 
+           focus:border-university-red focus:ring-2 focus:ring-university-red-100 
+           outline-none transition-all duration-200;
+  }
+
+  .gradient-red {
+    @apply bg-gradient-to-br from-university-red-600 to-university-red-700;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-school-grey-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-school-grey-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-school-grey-400;
+}

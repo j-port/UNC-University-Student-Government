@@ -1,0 +1,15 @@
+{
+  "name": "unc-usg-website",
+  "version": "1.0.0",
+  "description": "University of Nueva Caceres Student Government Website",
+  "scripts": {
+    "install:all": "cd frontend && npm install && cd ../backend && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+    "preview:frontend": "cd frontend && npm run preview"
+  },
+  "keywords": ["usg", "university", "student-government"],
+  "author": "UNC Student Government",
+  "license": "MIT"
+}
