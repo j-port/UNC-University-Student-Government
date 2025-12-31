@@ -200,18 +200,26 @@ INSERT INTO issuances (title, description, type, file_url, file_name, status, pu
 -- 9. FEEDBACK SUBMISSIONS (TINIG DINIG)
 -- =====================================================
 
-INSERT INTO feedback (name, email, student_id, college, subject, message, category, status, is_anonymous) VALUES
-('Maria Santos', 'maria.santos@unc.edu.ph', '2021-12345', 'College of Arts and Sciences',
+INSERT INTO feedback (reference_number, name, email, student_id, college, subject, message, category, status, is_anonymous, created_at) VALUES
+('TNG-20251215-001', 'Maria Santos', 'maria.santos@unc.edu.ph', '2021-12345', 'College of Arts and Sciences',
  'Library Facilities Improvement', 'The library needs more power outlets for laptops and better WiFi coverage in the upper floors.',
- 'Facilities', 'pending', false),
+ 'Facilities', 'pending', false, '2025-12-15 09:30:00'),
 
-('Anonymous Student', null, null, 'College of Computer Studies',
+('TNG-20251220-002', 'Anonymous Student', null, null, 'College of Computer Studies',
  'Mental Health Support', 'Can we have more accessible counseling services? Sometimes the waiting time is too long.',
- 'Student Welfare', 'in-progress', true),
+ 'Student Welfare', 'in_progress', true, '2025-12-20 14:20:00'),
 
-('Pedro Reyes', 'pedro.reyes@unc.edu.ph', '2020-67890', 'College of Business and Accountancy',
+('TNG-20251225-003', 'Pedro Reyes', 'pedro.reyes@unc.edu.ph', '2020-67890', 'College of Business and Accountancy',
  'Cafeteria Food Prices', 'Food prices in the cafeteria have increased significantly. Can the USG negotiate with vendors for student discounts?',
- 'Suggestion', 'resolved', false);
+ 'Suggestion', 'resolved', false, '2025-12-25 11:45:00'),
+
+('TNG-20251228-004', 'Juan Dela Cruz', 'juan.delacruz@unc.edu.ph', '2022-11111', 'College of Engineering and Architecture',
+ 'Laboratory Equipment Update', 'The engineering lab needs updated equipment for our project requirements. Current machines are outdated.',
+ 'Academic', 'responded', false, '2025-12-28 16:10:00'),
+
+('TNG-20251230-005', 'Ana Garcia', 'ana.garcia@unc.edu.ph', '2023-22222', 'College of Nursing',
+ 'Parking Space Issue', 'Not enough parking spaces for students. Many arrive late to class due to difficulty finding parking.',
+ 'Facilities', 'in_progress', false, '2025-12-30 08:15:00');
 
 -- =====================================================
 -- 10. FINANCIAL TRANSACTIONS

@@ -28,6 +28,12 @@ export function useFeedback() {
             // Transform data to match component structure
             const transformedData = (data || []).map((item) => ({
                 id: item.id,
+                referenceNumber:
+                    item.reference_number ||
+                    `TNG-${new Date(item.created_at)
+                        .toISOString()
+                        .slice(0, 10)
+                        .replace(/-/g, "")}-${item.id}`,
                 fullName: item.name,
                 email: item.email,
                 studentId: item.student_id,

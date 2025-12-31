@@ -14,6 +14,7 @@
 DROP TABLE IF EXISTS site_content CASCADE;
 DROP TABLE IF EXISTS page_content CASCADE;
 DROP TABLE IF EXISTS governance_documents CASCADE;
+DROP TABLE IF EXISTS feedback CASCADE;
 
 -- =====================================================
 -- TABLE OF CONTENTS
@@ -257,6 +258,9 @@ CREATE TABLE IF NOT EXISTS feedback (
   -- Primary key
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   
+  -- Reference number for tracking
+  reference_number TEXT UNIQUE,
+  
   -- Submitter information (optional for anonymous feedback)
   name TEXT,
   email TEXT,
@@ -269,7 +273,7 @@ CREATE TABLE IF NOT EXISTS feedback (
   message TEXT NOT NULL,
   
   -- Status tracking
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'resolved', 'closed')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'responded', 'resolved')),
   response TEXT,
   is_anonymous BOOLEAN DEFAULT false,
   
@@ -279,8 +283,9 @@ CREATE TABLE IF NOT EXISTS feedback (
 );
 
 COMMENT ON TABLE feedback IS 'Stores student feedback submissions from TINIG DINIG system';
+COMMENT ON COLUMN feedback.reference_number IS 'Unique tracking reference number in format TNG-YYYYMMDD-ID';
 COMMENT ON COLUMN feedback.is_anonymous IS 'True if feedback was submitted anonymously';
-COMMENT ON COLUMN feedback.status IS 'Feedback resolution status: pending, in-progress, resolved, or closed';
+COMMENT ON COLUMN feedback.status IS 'Feedback resolution status: pending, in_progress, responded, or resolved';
 
 -- =====================================================
 -- 8. FINANCIAL TRANSACTIONS
@@ -460,6 +465,7 @@ CREATE INDEX IF NOT EXISTS idx_governance_type ON governance_documents(type);
 CREATE INDEX IF NOT EXISTS idx_governance_active ON governance_documents(is_active);
 
 -- Feedback indexes
+CREATE INDEX IF NOT EXISTS idx_feedback_reference_number ON feedback(reference_number);
 CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback(status);
 CREATE INDEX IF NOT EXISTS idx_feedback_category ON feedback(category);
 CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at);
