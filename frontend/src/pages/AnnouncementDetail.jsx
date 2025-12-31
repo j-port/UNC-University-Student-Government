@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { Calendar, ArrowLeft, Tag } from 'lucide-react'
 import PageHeader from '../components/PageHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { supabase } from '../api'
+import { supabase } from '../lib/supabaseClient'
 
 export default function AnnouncementDetail() {
   const { id } = useParams()

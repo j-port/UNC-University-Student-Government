@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { notificationsAPI } from "../lib/api";
 
 /**
- * Custom hook for managing real-time notifications
+ * Custom hook for managing real-time notifications via backend API
  * Tracks new feedback and important status changes
  */
 export function useNotifications() {
@@ -17,14 +17,12 @@ export function useNotifications() {
     const fetchNotifications = useCallback(async () => {
         try {
             // Get feedback created after last check
-            const { data: newFeedback, error: feedbackError } = await supabase
-                .from("feedback")
-                .select("*")
-                .gte("created_at", lastChecked.toISOString())
-                .order("created_at", { ascending: false });
+            const response = await notificationsAPI.getNewFeedback(
+                lastChecked.toISOString()
+            );
+            if (!response.success) throw new Error(response.error);
 
-            if (feedbackError) throw feedbackError;
-
+            const newFeedback = response.data;
             const notificationList = [];
 
             // Add new feedback notifications
@@ -102,61 +100,17 @@ export function useNotifications() {
         setUnreadCount(0);
     }, []);
 
-    // Setup real-time subscription
+    // Fetch notifications on mount and set up polling
     useEffect(() => {
         fetchNotifications();
 
-        // Subscribe to new feedback
-        const subscription = supabase
-            .channel("feedback-notifications")
-            .on(
-                "postgres_changes",
-                {
-                    event: "INSERT",
-                    schema: "public",
-                    table: "feedback",
-                },
-                (payload) => {
-                    console.log("New feedback received:", payload);
-                    const newItem = payload.new;
-                    const notification = {
-                        id: `feedback-${newItem.id}`,
-                        type: "new_feedback",
-                        title: "New Feedback Received",
-                        message: `${
-                            newItem.name || "Anonymous"
-                        } submitted feedback: ${newItem.subject}`,
-                        category: newItem.category,
-                        status: newItem.status,
-                        referenceNumber: newItem.reference_number,
-                        feedbackId: newItem.id,
-                        timestamp: newItem.created_at,
-                        read: false,
-                    };
-
-                    setNotifications((prev) => [notification, ...prev]);
-                    setUnreadCount((prev) => prev + 1);
-
-                    // Show browser notification if permission granted
-                    if (
-                        "Notification" in window &&
-                        Notification.permission === "granted"
-                    ) {
-                        new Notification("New Feedback Received", {
-                            body: notification.message,
-                            icon: "/USG LOGO NO BG.png",
-                            badge: "/USG LOGO NO BG.png",
-                        });
-                    }
-                }
-            )
-            .subscribe((status) => {
-                console.log("Notification subscription status:", status);
-            });
+        // Poll for new notifications every 30 seconds
+        const interval = setInterval(() => {
+            fetchNotifications();
+        }, 30000);
 
         return () => {
-            console.log("Unsubscribing from notifications");
-            subscription.unsubscribe();
+            clearInterval(interval);
         };
     }, [fetchNotifications]);
 

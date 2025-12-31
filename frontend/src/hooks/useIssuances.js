@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-    fetchIssuances,
-    createIssuance,
-    updateIssuance,
-    deleteIssuance,
-} from "../api/announcements";
+import { issuancesAPI } from "../lib/api";
 
 /**
  * Custom hook for managing issuances
@@ -26,17 +21,13 @@ export function useIssuances() {
                 setError(null);
             }
 
-            const { data, error: fetchError } = await fetchIssuances({
-                limit: null,
-            }); // Fetch all for admin
+            const response = await issuancesAPI.getAll();
 
-            if (fetchError) {
-                throw new Error(
-                    fetchError.message || "Failed to fetch issuances"
-                );
+            if (!response.success) {
+                throw new Error(response.error || "Failed to fetch issuances");
             }
 
-            setIssuances(data || []);
+            setIssuances(response.data || []);
         } catch (err) {
             if (!err.message?.includes("Could not find the table")) {
                 console.error("Error fetching issuances:", err);
@@ -64,13 +55,11 @@ export function useIssuances() {
     const create = useCallback(
         async (issuanceData) => {
             try {
-                const { error: createError } = await createIssuance(
-                    issuanceData
-                );
+                const response = await issuancesAPI.create(issuanceData);
 
-                if (createError) {
+                if (!response.success) {
                     throw new Error(
-                        createError.message || "Failed to create issuance"
+                        response.error || "Failed to create issuance"
                     );
                 }
 
@@ -102,16 +91,13 @@ export function useIssuances() {
                         )
                 );
 
-                const { error: updateError } = await updateIssuance(
-                    id,
-                    updates
-                );
+                const response = await issuancesAPI.update(id, updates);
 
-                if (updateError) {
+                if (!response.success) {
                     // Rollback on error
                     setIssuances(previousIssuances);
                     throw new Error(
-                        updateError.message || "Failed to update issuance"
+                        response.error || "Failed to update issuance"
                     );
                 }
 
@@ -136,13 +122,13 @@ export function useIssuances() {
                 const previousIssuances = [...issuances];
                 setIssuances((prev) => prev.filter((item) => item.id !== id));
 
-                const { error: deleteError } = await deleteIssuance(id);
+                const response = await issuancesAPI.delete(id);
 
-                if (deleteError) {
+                if (!response.success) {
                     // Rollback on error
                     setIssuances(previousIssuances);
                     throw new Error(
-                        deleteError.message || "Failed to delete issuance"
+                        response.error || "Failed to delete issuance"
                     );
                 }
             } catch (err) {

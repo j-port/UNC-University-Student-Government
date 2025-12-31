@@ -1,77 +1,50 @@
-import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabaseClient'
+import { useState, useEffect } from "react";
+import { statsAPI } from "../lib/api";
 
 /**
- * Custom hook to fetch and calculate automated statistics from the database
+ * Custom hook to fetch and calculate automated statistics from the backend API
  * This reduces manual admin work by auto-calculating counts from real data
  */
 export function useAutomatedStats() {
-  const [stats, setStats] = useState({
-    eventsCount: 0,
-    accomplishmentsCount: 0,
-    totalBudget: 0,
-    organizationsCount: 0,
-    loading: true,
-  })
+    const [stats, setStats] = useState({
+        eventsCount: 0,
+        accomplishmentsCount: 0,
+        totalBudget: 0,
+        organizationsCount: 0,
+        loading: true,
+    });
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // Count events from announcements
-        const { count: eventsCount } = await supabase
-          .from('announcements')
-          .select('*', { count: 'exact', head: true })
-          .eq('category', 'event')
-          .eq('status', 'published')
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const response = await statsAPI.getAutomated();
+                if (!response.success) throw new Error(response.error);
 
-        // Count accomplishments from announcements
-        const { count: accomplishmentsCount } = await supabase
-          .from('announcements')
-          .select('*', { count: 'exact', head: true })
-          .eq('category', 'accomplishment')
-          .eq('status', 'published')
+                setStats({
+                    ...response.data,
+                    loading: false,
+                });
+            } catch (error) {
+                console.error("Error fetching automated stats:", error);
+                setStats((prev) => ({ ...prev, loading: false }));
+            }
+        };
 
-        // Sum total budget from financial transactions (absolute values)
-        const { data: transactions } = await supabase
-          .from('financial_transactions')
-          .select('amount')
+        fetchStats();
+    }, []);
 
-        const totalBudget = transactions?.reduce((sum, t) => sum + Math.abs(t.amount || 0), 0) || 0
+    // Format budget for display (₱2.5M format)
+    const formatBudget = (amount) => {
+        if (amount >= 1000000) {
+            return `₱${(amount / 1000000).toFixed(1)}M+`;
+        } else if (amount >= 1000) {
+            return `₱${(amount / 1000).toFixed(0)}K+`;
+        }
+        return `₱${amount}+`;
+    };
 
-        // Count active organizations
-        const { count: organizationsCount } = await supabase
-          .from('organizations')
-          .select('*', { count: 'exact', head: true })
-          .eq('is_active', true)
-
-        setStats({
-          eventsCount: eventsCount || 0,
-          accomplishmentsCount: accomplishmentsCount || 0,
-          totalBudget,
-          organizationsCount: organizationsCount || 0,
-          loading: false,
-        })
-      } catch (error) {
-        console.error('Error fetching automated stats:', error)
-        setStats(prev => ({ ...prev, loading: false }))
-      }
-    }
-
-    fetchStats()
-  }, [])
-
-  // Format budget for display (₱2.5M format)
-  const formatBudget = (amount) => {
-    if (amount >= 1000000) {
-      return `₱${(amount / 1000000).toFixed(1)}M+`
-    } else if (amount >= 1000) {
-      return `₱${(amount / 1000).toFixed(0)}K+`
-    }
-    return `₱${amount}+`
-  }
-
-  return {
-    ...stats,
-    formattedBudget: formatBudget(stats.totalBudget),
-  }
+    return {
+        ...stats,
+        formattedBudget: formatBudget(stats.totalBudget),
+    };
 }

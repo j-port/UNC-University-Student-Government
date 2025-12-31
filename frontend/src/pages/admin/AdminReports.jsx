@@ -13,7 +13,7 @@ import {
 import { formatDate } from '../../utils/formatters'
 import { useNotification, useIssuances } from '../../hooks'
 import { ISSUANCE_TYPES } from '../../utils/constants'
-import { supabase } from '../../api'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function AdminReports() {
   const { issuances, loading, create, update, remove, toggleStatus } = useIssuances()

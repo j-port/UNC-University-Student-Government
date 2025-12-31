@@ -1,11 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-    fetchOfficers,
-    createOfficer,
-    updateOfficer,
-    deleteOfficer,
-    updateOfficersOrder,
-} from "../api";
+import { officersAPI } from "../lib/api";
 
 /**
  * Custom hook for managing officers with CRUD operations
@@ -21,13 +15,13 @@ export const useOfficers = (branch = null) => {
     const load = useCallback(async () => {
         setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await fetchOfficers(branch);
+        const response = await officersAPI.getAll(branch);
 
-        if (fetchError) {
-            setError(fetchError.message || "Failed to fetch officers");
+        if (!response.success) {
+            setError(response.error || "Failed to fetch officers");
             setOfficers([]);
         } else {
-            setOfficers(data || []);
+            setOfficers(response.data || []);
         }
 
         setLoading(false);
@@ -40,44 +34,46 @@ export const useOfficers = (branch = null) => {
 
     // Create new officer
     const create = useCallback(async (officerData) => {
-        const { data, error: createError } = await createOfficer(officerData);
+        const response = await officersAPI.create(officerData);
 
-        if (createError) {
-            throw new Error(createError.message || "Failed to create officer");
+        if (!response.success) {
+            throw new Error(response.error || "Failed to create officer");
         }
 
         // Add to local state
-        if (data && data[0]) {
-            setOfficers((prev) => [...prev, data[0]]);
+        if (response.data) {
+            setOfficers((prev) => [...prev, response.data]);
         }
 
-        return data;
+        return response.data;
     }, []);
 
     // Update existing officer
     const update = useCallback(async (id, updates) => {
-        const { data, error: updateError } = await updateOfficer(id, updates);
+        const response = await officersAPI.update(id, updates);
 
-        if (updateError) {
-            throw new Error(updateError.message || "Failed to update officer");
+        if (!response.success) {
+            throw new Error(response.error || "Failed to update officer");
         }
 
         // Update in local state
-        if (data && data[0]) {
+        if (response.data) {
             setOfficers((prev) =>
-                prev.map((officer) => (officer.id === id ? data[0] : officer))
+                prev.map((officer) =>
+                    officer.id === id ? response.data : officer
+                )
             );
         }
 
-        return data;
+        return response.data;
     }, []);
 
     // Delete officer
     const remove = useCallback(async (id) => {
-        const { error: deleteError } = await deleteOfficer(id);
+        const response = await officersAPI.delete(id);
 
-        if (deleteError) {
-            throw new Error(deleteError.message || "Failed to delete officer");
+        if (!response.success) {
+            throw new Error(response.error || "Failed to delete officer");
         }
 
         // Remove from local state
@@ -91,16 +87,21 @@ export const useOfficers = (branch = null) => {
             const previousOfficers = officers;
             setOfficers(reorderedOfficers);
 
-            const { error: reorderError } = await updateOfficersOrder(
-                reorderedOfficers
-            );
-
-            if (reorderError) {
+            try {
+                // Update each officer's order_index individually
+                for (let i = 0; i < reorderedOfficers.length; i++) {
+                    const officer = reorderedOfficers[i];
+                    const response = await officersAPI.update(officer.id, {
+                        order_index: i,
+                    });
+                    if (!response.success) {
+                        throw new Error(response.error);
+                    }
+                }
+            } catch (err) {
                 // Rollback on error
                 setOfficers(previousOfficers);
-                throw new Error(
-                    reorderError.message || "Failed to reorder officers"
-                );
+                throw new Error(err.message || "Failed to reorder officers");
             }
         },
         [officers]

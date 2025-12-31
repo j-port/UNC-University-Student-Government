@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import AnnouncementCard from '../components/AnnouncementCard'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { fetchAnnouncements, fetchIssuances } from '../api'
+import { fetchAnnouncements, fetchIssuances } from '../lib/supabaseClient'
 import { FileText, Megaphone, ArrowRight, Calendar, Download, X, Eye } from 'lucide-react'
 
 const containerVariants = {

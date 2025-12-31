@@ -184,16 +184,101 @@ export const siteContentAPI = {
             method: "POST",
             body: JSON.stringify(contentData),
         }),
+
+    delete: (id) =>
+        apiRequest(`/site-content/${id}`, {
+            method: "DELETE",
+        }),
 };
 
 // Page Content API
 export const pageContentAPI = {
+    getAll: () => apiRequest("/page-content"),
+
     getBySlug: (slug) => apiRequest(`/page-content/${slug}`),
 
     upsert: (contentData) =>
         apiRequest("/page-content", {
             method: "POST",
             body: JSON.stringify(contentData),
+        }),
+
+    delete: (id) =>
+        apiRequest(`/page-content/${id}`, {
+            method: "DELETE",
+        }),
+};
+
+// Stats API
+export const statsAPI = {
+    getAutomated: () => apiRequest("/stats/automated"),
+};
+
+// Notifications API
+export const notificationsAPI = {
+    getNewFeedback: (since) => {
+        const query = since ? `?since=${encodeURIComponent(since)}` : "";
+        return apiRequest(`/notifications${query}`);
+    },
+};
+
+// Financial Transactions API
+export const financialTransactionsAPI = {
+    getAll: (search = "", limit = 50) => {
+        const params = new URLSearchParams();
+        if (search) params.append("search", search);
+        if (limit) params.append("limit", limit);
+        const query = params.toString() ? `?${params.toString()}` : "";
+        return apiRequest(`/financial-transactions${query}`);
+    },
+
+    getById: (id) => apiRequest(`/financial-transactions/${id}`),
+
+    create: (transactionData) =>
+        apiRequest("/financial-transactions", {
+            method: "POST",
+            body: JSON.stringify(transactionData),
+        }),
+
+    update: (id, updates) =>
+        apiRequest(`/financial-transactions/${id}`, {
+            method: "PUT",
+            body: JSON.stringify(updates),
+        }),
+
+    delete: (id) =>
+        apiRequest(`/financial-transactions/${id}`, {
+            method: "DELETE",
+        }),
+};
+
+// Issuances API
+export const issuancesAPI = {
+    getAll: (limit = 10, status = null) => {
+        const params = new URLSearchParams();
+        if (limit) params.append("limit", limit);
+        if (status) params.append("status", status);
+        const query = params.toString() ? `?${params.toString()}` : "";
+        return apiRequest(`/issuances${query}`);
+    },
+
+    getById: (id) => apiRequest(`/issuances/${id}`),
+
+    create: (issuanceData) =>
+        apiRequest("/issuances", {
+            method: "POST",
+            body: JSON.stringify(issuanceData),
+        }),
+
+    update: (id, updates) =>
+        apiRequest(`/issuances/${id}`, {
+            method: "PUT",
+            body: JSON.stringify(updates),
+        }),
+
+    delete: (id) =>
+        apiRequest(`/issuances/${id}`, {
+            method: "DELETE",
         }),
 };
 
