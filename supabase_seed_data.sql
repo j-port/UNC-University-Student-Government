@@ -283,6 +283,10 @@ VALUES
 
 Through transparency, accountability, and active engagement, we work tirelessly to ensure that every student''s concerns are heard and addressed.', true),
 
+-- About page - Header
+('about', 'header', 'University Student Government', 
+ 'Designing Spaces for a Better Future - Your voice, our mission', true),
+
 -- About page - Mission
 ('about', 'mission', 'Our Mission', 
  'To serve as the unified voice of the student body, advocating for their rights, welfare, and interests. We are committed to fostering a culture of transparency, accountability, and excellence in student governance while promoting active participation in university affairs.', true),

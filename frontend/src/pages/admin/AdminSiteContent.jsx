@@ -37,35 +37,35 @@ const iconOptions = [
 const sectionTypes = [
     {
         value: "heroStats",
-        label: "📊 Hero Section Statistics",
+        label: "Hero Section Statistics",
         description: "Numbers displayed prominently at the top of the homepage (e.g., '10,000+ Students Served')",
         example: "Example: Students Served - 10,000+",
         recommended: 4,
     },
     {
         value: "homeStats",
-        label: "📈 Home Page Statistics",
+        label: "Home Page Statistics",
         description: "Key numbers shown in the statistics section below the hero (e.g., 'Projects Completed - 50+')",
         example: "Example: Budget Managed - ₱2M+",
         recommended: 4,
     },
     {
         value: "coreValues",
-        label: "⭐ Core Values",
+        label: "Core Values",
         description: "The fundamental principles and values that guide USG (e.g., 'Transparency', 'Accountability')",
         example: "Example: Service, Excellence, Unity",
         recommended: 5,
     },
     {
         value: "heroFeatures",
-        label: "🎯 Quick Access Cards",
+        label: "Quick Access Cards",
         description: "Clickable cards that link to important pages (e.g., 'Governance Hub', 'Bulletins')",
         example: "Example: Transparency Portal → /transparency",
         recommended: 3,
     },
     {
         value: "achievements",
-        label: "🏆 Accomplishments",
+        label: "Accomplishments",
         description: "Major achievements and milestones of USG (e.g., 'Enhanced Student Welfare')",
         example: "Example: Budget Transparency Initiative",
         recommended: 3,
@@ -280,7 +280,7 @@ export default function AdminSiteContent() {
         <div className="space-y-8">
             {/* Header */}
             <div className="bg-gradient-to-r from-university-red to-university-red-600 rounded-3xl p-8 text-white">
-                <h1 className="text-3xl font-bold mb-2">📝 Homepage Content Editor</h1>
+                <h1 className="text-3xl font-bold mb-2">Homepage Content Editor</h1>
                 <p className="text-white/90 mb-4 max-w-3xl">
                     Welcome! This page lets you update what visitors see on the USG website homepage. 
                     No coding knowledge needed - just fill in the forms and your changes will appear instantly!
@@ -926,12 +926,14 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                             </div>
                         </>
                     ) : (
-                        <>
-                            {/* Page */}
+                        <>  {/* Page */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
                                     Page
                                 </label>
+                                <p className="text-xs text-school-grey-500 mb-2">
+                                    Which page this content will appear on
+                                </p>
                                 <select
                                     value={formData.page}
                                     onChange={(e) =>
@@ -942,18 +944,20 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                     }
                                     className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
                                     required>
-                                    <option value="home">Home</option>
-                                    <option value="about">About</option>
+                                    <option value="home">Home Page</option>
+                                    <option value="about">About Page</option>
                                 </select>
                             </div>
 
                             {/* Section Key */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
-                                    Section Key
+                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
+                                    Section
                                 </label>
-                                <input
-                                    type="text"
+                                <p className="text-xs text-school-grey-500 mb-2">
+                                    What type of content is this?
+                                </p>
+                                <select
                                     value={formData.section_key}
                                     onChange={(e) =>
                                         setFormData({
@@ -962,16 +966,26 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                         })
                                     }
                                     className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
-                                    placeholder="e.g., about, mission, vision"
-                                    required
-                                />
+                                    required>
+                                    <option value="">Select a section</option>
+                                    <option value="header">Page Header (Title & Subtitle)</option>
+                                    <option value="about">About Section</option>
+                                    <option value="mission">Mission Statement</option>
+                                    <option value="vision">Vision Statement</option>
+                                </select>
+                                <p className="text-xs text-school-grey-400 mt-1">
+                                    Page Header = Main title and subtitle shown at the top
+                                </p>
                             </div>
 
                             {/* Title */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
                                     Title
                                 </label>
+                                <p className="text-xs text-school-grey-500 mb-2">
+                                    The heading that will be displayed on the page (shown in bold/large text)
+                                </p>
                                 <input
                                     type="text"
                                     value={formData.title}
@@ -982,16 +996,22 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                         })
                                     }
                                     className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
-                                    placeholder="Section title"
+                                    placeholder="e.g., Our Mission, University Student Government"
                                     required
                                 />
+                                <p className="text-xs text-school-grey-400 mt-1">
+                                    For page header: use full page title (e.g., "University Student Government")
+                                </p>
                             </div>
 
                             {/* Content */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
                                     Content
                                 </label>
+                                <p className="text-xs text-school-grey-500 mb-2">
+                                    The main text/paragraph that will be displayed (for subtitles or descriptions)
+                                </p>
                                 <textarea
                                     value={formData.content}
                                     onChange={(e) =>
@@ -1002,9 +1022,13 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                     }
                                     rows={6}
                                     className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
-                                    placeholder="Content text (use double line breaks for paragraphs)"
+                                    placeholder="Enter the text content here... (use double line breaks for paragraphs)"
                                     required
                                 />
+                                <p className="text-xs text-school-grey-400 mt-1">
+                                    <strong>For page header:</strong> This is the subtitle shown below the page title<br />
+                                    <strong>For mission/vision:</strong> This is the full mission/vision statement paragraph
+                                </p>
                             </div>
                         </>
                     )}

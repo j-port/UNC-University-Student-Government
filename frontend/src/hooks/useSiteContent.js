@@ -14,6 +14,7 @@ export function useSiteContent() {
         achievements: [],
         heroFeatures: [],
         about: null,
+        header: null,
         mission: null,
         vision: null,
     });
@@ -88,6 +89,7 @@ export function useSiteContent() {
             setContent({
                 ...contentBySectionType,
                 about: pageContentMap.about || null,
+                header: pageContentMap.header || null,
                 mission: pageContentMap.mission || null,
                 vision: pageContentMap.vision || null,
             });
@@ -103,6 +105,7 @@ export function useSiteContent() {
                 achievements: [],
                 heroFeatures: [],
                 about: null,
+                header: null,
                 mission: null,
                 vision: null,
             });
