@@ -221,8 +221,8 @@ export default function AdminOrgChart() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-school-grey-800">Organizational Chart</h1>
-        <p className="text-school-grey-500">Manage USG officers and committees</p>
+        <h1 className="text-2xl font-bold text-school-grey-800 dark:text-white">Organizational Chart</h1>
+        <p className="text-school-grey-500 dark:text-gray-400">Manage USG officers and committees</p>
       </div>
 
       {/* Executive Branch */}
@@ -240,7 +240,7 @@ export default function AdminOrgChart() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="bg-white rounded-2xl border border-school-grey-100 p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
           >
             <div className="flex justify-end mb-4">
               <button
@@ -275,7 +275,7 @@ export default function AdminOrgChart() {
                         alt={member.name}
                         className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
                       />
-                      <h3 className="font-semibold text-school-grey-800">{member.name}</h3>
+                      <h3 className="font-semibold text-school-grey-800 dark:text-white">{member.name}</h3>
                       <p className="text-sm font-medium text-university-red">{member.position}</p>
                       <p className="text-xs text-school-grey-500 mt-1">{member.email}</p>
                     </DragDropCard>
@@ -301,7 +301,7 @@ export default function AdminOrgChart() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="bg-white rounded-2xl border border-school-grey-100 p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
           >
             <div className="flex justify-end mb-4">
               <button
@@ -336,7 +336,7 @@ export default function AdminOrgChart() {
                         alt={member.name}
                         className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
                       />
-                      <h3 className="font-semibold text-school-grey-800">{member.name}</h3>
+                      <h3 className="font-semibold text-school-grey-800 dark:text-white">{member.name}</h3>
                       <p className="text-sm font-medium text-blue-600">{member.position}</p>
                       <p className="text-xs text-school-grey-500 mt-1">{member.email}</p>
                     </DragDropCard>
@@ -362,7 +362,7 @@ export default function AdminOrgChart() {
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className="bg-white rounded-2xl border border-school-grey-100 p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
           >
             <div className="flex justify-end mb-4">
               <button
@@ -376,9 +376,9 @@ export default function AdminOrgChart() {
             
             <div className="space-y-3">
               {committeesHook.committees.map((committee) => (
-                <div key={committee.id} className="flex items-center justify-between bg-school-grey-50 rounded-xl p-4">
+                <div key={committee.id} className="flex items-center justify-between bg-school-grey-50 dark:bg-gray-700 rounded-xl p-4 transition-colors">
                   <div>
-                    <h3 className="font-semibold text-school-grey-800">{committee.name}</h3>
+                    <h3 className="font-semibold text-school-grey-800 dark:text-white">{committee.name}</h3>
                     <p className="text-sm text-school-grey-500">
                       Head: {committee.head_name || committee.head} • {committee.member_count || committee.members} members
                     </p>
@@ -445,12 +445,12 @@ export default function AdminOrgChart() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Description (Optional)</label>
+                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Description (Optional)</label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows="3"
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                   placeholder="Brief description of the committee..."
                 />
               </div>
@@ -504,7 +504,7 @@ export default function AdminOrgChart() {
             <button
               type="button"
               onClick={resetForm}
-              className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+              className="px-6 py-3 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>

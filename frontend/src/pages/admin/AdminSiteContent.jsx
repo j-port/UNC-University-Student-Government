@@ -365,17 +365,17 @@ export default function AdminSiteContent() {
                         return (
                             <div
                                 key={section.value}
-                                className="bg-white rounded-2xl p-6 shadow-sm border border-school-grey-100">
+                                className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-school-grey-100 dark:border-gray-700 transition-colors">
                                 <div className="mb-4">
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
-                                            <h2 className="text-xl font-bold text-school-grey-800 mb-1">
+                                            <h2 className="text-xl font-bold text-school-grey-800 dark:text-white mb-1">
                                                 {section.label}
                                             </h2>
-                                            <p className="text-sm text-school-grey-600 mb-2">
+                                            <p className="text-sm text-school-grey-600 dark:text-gray-400 mb-2">
                                                 {section.description}
                                             </p>
-                                            <p className="text-xs text-school-grey-500 italic">
+                                            <p className="text-xs text-school-grey-500 dark:text-gray-500 italic">
                                                 {section.example}
                                             </p>
                                         </div>
@@ -402,14 +402,14 @@ export default function AdminSiteContent() {
                                             />
                                         ))
                                     ) : (
-                                        <div className="text-center py-12 bg-school-grey-50 rounded-xl border-2 border-dashed border-school-grey-200">
-                                            <div className="text-school-grey-400 mb-3">
+                                        <div className="text-center py-12 bg-school-grey-50 dark:bg-gray-700 rounded-xl border-2 border-dashed border-school-grey-200 dark:border-gray-600">
+                                            <div className="text-school-grey-400 dark:text-gray-500 mb-3">
                                                 <FileText className="w-12 h-12 mx-auto opacity-50" />
                                             </div>
-                                            <p className="text-school-grey-600 font-medium mb-1">
+                                            <p className="text-school-grey-600 dark:text-gray-300 font-medium mb-1">
                                                 No content added yet
                                             </p>
-                                            <p className="text-sm text-school-grey-500 mb-4">
+                                            <p className="text-sm text-school-grey-500 dark:text-gray-400 mb-4">
                                                 Click "Add Content" above and select "{section.label}" to get started
                                             </p>
                                             <button
@@ -482,7 +482,7 @@ export default function AdminSiteContent() {
                             />
                         ))
                     ) : (
-                        <div className="text-center py-16 bg-white rounded-xl border-2 border-dashed border-school-grey-200">
+                        <div className="text-center py-16 bg-white dark:bg-gray-800 rounded-xl border-2 border-dashed border-school-grey-200 dark:border-gray-700 transition-colors">
                             <div className="text-school-grey-400 mb-4">
                                 <FileText className="w-16 h-16 mx-auto opacity-50" />
                             </div>
@@ -545,7 +545,7 @@ function SiteContentItem({ item, onEdit, onDelete }) {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="flex items-center justify-between p-4 bg-school-grey-50 rounded-xl hover:bg-school-grey-100 transition-colors">
+            className="flex items-center justify-between p-4 bg-school-grey-50 dark:bg-gray-700 rounded-xl hover:bg-school-grey-100 dark:hover:bg-gray-600 transition-colors">
             <div className="flex items-center space-x-4 flex-1">
                 {IconComponent && (
                     <div className="w-10 h-10 bg-university-red-50 rounded-lg flex items-center justify-center">
@@ -554,22 +554,22 @@ function SiteContentItem({ item, onEdit, onDelete }) {
                 )}
                 <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold text-school-grey-800">
+                        <h3 className="font-semibold text-school-grey-800 dark:text-white">
                             {item.title || item.content}
                         </h3>
                         {!item.active && (
-                            <span className="px-2 py-0.5 bg-school-grey-200 text-school-grey-600 text-xs rounded-full">
+                            <span className="px-2 py-0.5 bg-school-grey-200 dark:bg-gray-700 text-school-grey-600 dark:text-gray-400 text-xs rounded-full">
                                 Inactive
                             </span>
                         )}
                     </div>
                     {item.metadata?.value && (
-                        <p className="text-sm text-school-grey-600">
+                        <p className="text-sm text-school-grey-600 dark:text-gray-400">
                             Value: {item.metadata.value}
                         </p>
                     )}
                     {item.metadata?.label && (
-                        <p className="text-sm text-school-grey-600">
+                        <p className="text-sm text-school-grey-600 dark:text-gray-400">
                             Label: {item.metadata.label}
                         </p>
                     )}
@@ -579,8 +579,8 @@ function SiteContentItem({ item, onEdit, onDelete }) {
             <div className="flex items-center space-x-2">
                 <button
                     onClick={() => onEdit(item)}
-                    className="p-2 hover:bg-white rounded-lg transition-colors">
-                    <Edit2 className="w-4 h-4 text-school-grey-600" />
+                    className="p-2 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <Edit2 className="w-4 h-4 text-school-grey-600 dark:text-gray-400" />
                 </button>
                 <button
                     onClick={() => onDelete(item.id)}
@@ -598,26 +598,26 @@ function PageContentItem({ item, onEdit, onDelete }) {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="bg-white rounded-2xl p-6 shadow-sm border border-school-grey-100">
+            className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm border border-school-grey-100 dark:border-gray-700 transition-colors">
             <div className="flex items-start justify-between">
                 <div className="flex-1">
                     <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-bold text-school-grey-800">
+                        <h3 className="text-lg font-bold text-school-grey-800 dark:text-white">
                             {item.title}
                         </h3>
                         <span className="px-2 py-0.5 bg-university-red-50 text-university-red text-xs rounded-full">
                             {item.page}
                         </span>
                         {!item.active && (
-                            <span className="px-2 py-0.5 bg-school-grey-200 text-school-grey-600 text-xs rounded-full">
+                            <span className="px-2 py-0.5 bg-school-grey-200 dark:bg-gray-700 text-school-grey-600 dark:text-gray-400 text-xs rounded-full">
                                 Inactive
                             </span>
                         )}
                     </div>
-                    <p className="text-school-grey-600 text-sm mb-2">
+                    <p className="text-school-grey-600 dark:text-gray-400 text-sm mb-2">
                         Key: {item.section_key}
                     </p>
-                    <p className="text-school-grey-700 line-clamp-3">
+                    <p className="text-school-grey-700 dark:text-gray-300 line-clamp-3">
                         {item.content}
                     </p>
                 </div>
@@ -625,12 +625,12 @@ function PageContentItem({ item, onEdit, onDelete }) {
                 <div className="flex items-center space-x-2 ml-4">
                     <button
                         onClick={() => onEdit(item)}
-                        className="p-2 hover:bg-school-grey-50 rounded-lg transition-colors">
-                        <Edit2 className="w-4 h-4 text-school-grey-600" />
+                        className="p-2 hover:bg-school-grey-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                        <Edit2 className="w-4 h-4 text-school-grey-600 dark:text-gray-400" />
                     </button>
                     <button
                         onClick={() => onDelete(item.id)}
-                        className="p-2 hover:bg-red-50 rounded-lg transition-colors">
+                        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4 text-red-600" />
                     </button>
                 </div>
@@ -663,15 +663,15 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-school-grey-800">
+                    <h2 className="text-2xl font-bold text-school-grey-800 dark:text-white">
                         {isNew ? "Add" : "Edit"}{" "}
                         {isSiteContent ? "Site" : "Page"} Content
                     </h2>
                     <button
                         onClick={onCancel}
-                        className="p-2 hover:bg-school-grey-100 rounded-lg">
+                        className="p-2 hover:bg-school-grey-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
                         <X className="w-5 h-5" />
                     </button>
                 </div>
@@ -681,7 +681,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                         <>
                             {/* Section Type */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                     Section Type
                                 </label>
                                 <select
@@ -692,7 +692,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             section_type: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white transition-colors"
                                     required>
                                     {sectionTypes.map((type) => (
                                         <option
@@ -706,7 +706,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
 
                             {/* Section Key */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                     Section Key (unique identifier)
                                 </label>
                                 <input
@@ -718,7 +718,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             section_key: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                     placeholder="e.g., students-served"
                                     required
                                 />
@@ -726,7 +726,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
 
                             {/* Title */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                     Title
                                 </label>
                                 <input
@@ -738,14 +738,14 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             title: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                     placeholder="e.g., Transparency"
                                 />
                             </div>
 
                             {/* Content */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                     Content
                                 </label>
                                 <textarea
@@ -757,7 +757,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                         })
                                     }
                                     rows={3}
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                     placeholder="Content text"
                                 />
                             </div>
@@ -769,7 +769,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                 "heroFeatures",
                             ].includes(formData.section_type) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                        <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                             Icon
                                         </label>
                                         <select
@@ -780,7 +780,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent">
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white transition-colors">
                                             <option value="">Select an icon</option>
                                             {iconOptions.map((icon) => (
                                                 <option
@@ -798,7 +798,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                 formData.section_type
                             ) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                        <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                             Value (e.g., "10,000+" or "100%")
                                         </label>
                                         <input
@@ -810,7 +810,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                             placeholder="e.g., 10,000+"
                                         />
                                     </div>
@@ -821,7 +821,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                 formData.section_type
                             ) && (
                                     <div>
-                                        <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                        <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                             Label
                                         </label>
                                         <input
@@ -833,7 +833,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                                     e.target.value
                                                 )
                                             }
-                                            className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                            className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                             placeholder="e.g., Students Served"
                                         />
                                     </div>
@@ -842,7 +842,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                             {/* Metadata - Description (for features) */}
                             {formData.section_type === "heroFeatures" && (
                                 <div>
-                                    <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                    <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                         Description
                                     </label>
                                     <textarea
@@ -856,7 +856,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             )
                                         }
                                         rows={2}
-                                        className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                         placeholder="Feature description"
                                     />
                                 </div>
@@ -865,7 +865,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                             {/* Metadata - Path (for features) */}
                             {formData.section_type === "heroFeatures" && (
                                 <div>
-                                    <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                                    <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                                         Path (link URL)
                                     </label>
                                     <input
@@ -877,7 +877,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                                 e.target.value
                                             )
                                         }
-                                        className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                        className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                         placeholder="e.g., /governance"
                                     />
                                 </div>
@@ -951,10 +951,10 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
 
                             {/* Section Key */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-1">
                                     Section
                                 </label>
-                                <p className="text-xs text-school-grey-500 mb-2">
+                                <p className="text-xs text-school-grey-500 dark:text-gray-400 mb-2">
                                     What type of content is this?
                                 </p>
                                 <select
@@ -965,7 +965,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             section_key: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white transition-colors"
                                     required>
                                     <option value="">Select a section</option>
                                     <option value="header">Page Header (Title & Subtitle)</option>
@@ -980,10 +980,10 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
 
                             {/* Title */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-1">
                                     Title
                                 </label>
-                                <p className="text-xs text-school-grey-500 mb-2">
+                                <p className="text-xs text-school-grey-500 dark:text-gray-400 mb-2">
                                     The heading that will be displayed on the page (shown in bold/large text)
                                 </p>
                                 <input
@@ -995,7 +995,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                             title: e.target.value,
                                         })
                                     }
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                     placeholder="e.g., Our Mission, University Student Government"
                                     required
                                 />
@@ -1006,10 +1006,10 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
 
                             {/* Content */}
                             <div>
-                                <label className="block text-sm font-medium text-school-grey-700 mb-1">
+                                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-1">
                                     Content
                                 </label>
-                                <p className="text-xs text-school-grey-500 mb-2">
+                                <p className="text-xs text-school-grey-500 dark:text-gray-400 mb-2">
                                     The main text/paragraph that will be displayed (for subtitles or descriptions)
                                 </p>
                                 <textarea
@@ -1021,7 +1021,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                                         })
                                     }
                                     rows={6}
-                                    className="w-full px-4 py-2 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent"
+                                    className="w-full px-4 py-2 bg-white dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red focus:border-transparent text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-colors"
                                     placeholder="Enter the text content here... (use double line breaks for paragraphs)"
                                     required
                                 />
@@ -1059,7 +1059,7 @@ function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
                         <button
                             type="button"
                             onClick={onCancel}
-                            className="px-6 py-2 border border-school-grey-200 rounded-xl hover:bg-school-grey-50 transition-colors"
+                            className="px-6 py-2 border border-school-grey-200 dark:border-gray-600 rounded-xl hover:bg-school-grey-50 dark:hover:bg-gray-700 text-school-grey-700 dark:text-gray-300 transition-colors"
                             disabled={saving}>
                             Cancel
                         </button>

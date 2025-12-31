@@ -26,17 +26,17 @@ export default function DragDropCard({ item, onEdit, onDelete, color = 'bg-unive
         <div
             ref={setNodeRef}
             style={style}
-            className={`relative bg-white rounded-2xl border-2 ${
-                isDragging ? 'border-university-red shadow-xl' : 'border-school-grey-100'
+            className={`relative bg-white dark:bg-gray-800 rounded-2xl border-2 ${
+                isDragging ? 'border-university-red shadow-xl' : 'border-school-grey-100 dark:border-gray-700'
             } p-4 text-center transition-all hover:shadow-lg`}
         >
             {/* Drag Handle */}
             <div
                 {...attributes}
                 {...listeners}
-                className="absolute top-2 left-2 p-1 cursor-grab active:cursor-grabbing hover:bg-school-grey-200 rounded transition-colors"
+                className="absolute top-2 left-2 p-1 cursor-grab active:cursor-grabbing hover:bg-school-grey-200 dark:hover:bg-gray-600 rounded transition-colors"
             >
-                <GripVertical className="w-4 h-4 text-school-grey-400" />
+                <GripVertical className="w-4 h-4 text-school-grey-400 dark:text-gray-500" />
             </div>
 
             {/* Content */}
@@ -47,11 +47,11 @@ export default function DragDropCard({ item, onEdit, onDelete, color = 'bg-unive
                         alt={item.name}
                         className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
                     />
-                    <h3 className="font-semibold text-school-grey-800">{item.name}</h3>
+                    <h3 className="font-semibold text-school-grey-800 dark:text-white">{item.name}</h3>
                     <p className={`text-sm font-medium ${color === 'bg-university-red' ? 'text-university-red' : 'text-blue-600'}`}>
                         {item.position}
                     </p>
-                    <p className="text-xs text-school-grey-500 mt-1">{item.email}</p>
+                    <p className="text-xs text-school-grey-500 dark:text-gray-400 mt-1">{item.email}</p>
                 </>
             )}
 
@@ -59,17 +59,17 @@ export default function DragDropCard({ item, onEdit, onDelete, color = 'bg-unive
             <div className="flex justify-center space-x-2 mt-3">
                 <button
                     onClick={() => onEdit(item)}
-                    className={`p-2 text-school-grey-500 rounded-lg ${
+                    className={`p-2 text-school-grey-500 dark:text-gray-400 rounded-lg ${
                         color === 'bg-university-red'
-                            ? 'hover:text-university-red hover:bg-university-red/10'
-                            : 'hover:text-blue-600 hover:bg-blue-50'
+                            ? 'hover:text-university-red hover:bg-university-red/10 dark:hover:bg-university-red/20'
+                            : 'hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30'
                     }`}
                 >
                     <Edit className="w-4 h-4" />
                 </button>
                 <button
                     onClick={() => onDelete(item.id)}
-                    className="p-2 text-school-grey-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
+                    className="p-2 text-school-grey-500 dark:text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
                 >
                     <Trash2 className="w-4 h-4" />
                 </button>

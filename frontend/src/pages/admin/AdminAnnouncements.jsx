@@ -133,8 +133,8 @@ export default function AdminAnnouncements() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-school-grey-800">Announcements</h1>
-          <p className="text-school-grey-500">Create and manage announcements</p>
+          <h1 className="text-2xl font-bold text-school-grey-800 dark:text-white">Announcements</h1>
+          <p className="text-school-grey-500 dark:text-gray-400">Manage and publish announcements</p>
         </div>
         <button
           onClick={() => setShowEditor(true)}
@@ -146,15 +146,15 @@ export default function AdminAnnouncements() {
       </div>
 
       {/* Search */}
-      <div className="bg-white rounded-2xl shadow-sm border border-school-grey-100 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-4 transition-colors">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400" />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search announcements..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all text-school-grey-800 dark:text-white placeholder-school-grey-400 dark:placeholder-gray-500"
           />
         </div>
       </div>
@@ -167,11 +167,11 @@ export default function AdminAnnouncements() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
-            className="bg-white rounded-2xl shadow-sm border border-school-grey-100 overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 overflow-hidden transition-colors"
           >
             {/* Image */}
             {item.image && (
-              <div className="aspect-video bg-school-grey-100">
+              <div className="aspect-video bg-school-grey-100 dark:bg-gray-700">
                 <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
               </div>
             )}
@@ -181,7 +181,7 @@ export default function AdminAnnouncements() {
               {/* Meta */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  <span className="px-2 py-1 bg-school-grey-100 text-school-grey-600 rounded-full text-xs font-medium">
+                  <span className="px-2 py-1 bg-school-grey-100 dark:bg-gray-700 text-school-grey-600 dark:text-gray-300 rounded-full text-xs font-medium">
                     {item.category}
                   </span>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(item.priority)}`}>
@@ -196,17 +196,17 @@ export default function AdminAnnouncements() {
               </div>
 
               {/* Title & Content */}
-              <h3 className="font-bold text-school-grey-800 mb-2">{item.title}</h3>
-              <p className="text-sm text-school-grey-600 line-clamp-3 mb-4">{item.content}</p>
+              <h3 className="font-bold text-school-grey-800 dark:text-white mb-2">{item.title}</h3>
+              <p className="text-sm text-school-grey-600 dark:text-gray-300 line-clamp-3 mb-4">{item.content}</p>
 
               {/* Date */}
-              <div className="flex items-center text-xs text-school-grey-500 mb-4">
+              <div className="flex items-center text-xs text-school-grey-500 dark:text-gray-400 mb-4">
                 <Calendar className="w-4 h-4 mr-1" />
                 {formatDate(item.published_at || item.publishedAt || item.created_at || item.createdAt) || 'Not published'}
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between pt-4 border-t border-school-grey-100">
+              <div className="flex items-center justify-between pt-4 border-t border-school-grey-100 dark:border-gray-700">
                 <button
                   onClick={() => toggleStatus(item.id)}
                   className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
@@ -239,12 +239,12 @@ export default function AdminAnnouncements() {
       </div>
 
       {filteredAnnouncements.length === 0 && (
-        <div className="text-center py-12 bg-white rounded-2xl border border-school-grey-100">
-          <div className="w-16 h-16 bg-school-grey-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Tag className="w-8 h-8 text-school-grey-400" />
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-school-grey-100 dark:border-gray-700 transition-colors">
+          <div className="w-16 h-16 bg-school-grey-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Tag className="w-8 h-8 text-school-grey-400 dark:text-gray-500" />
           </div>
-          <h3 className="text-lg font-medium text-school-grey-600 mb-2">No announcements found</h3>
-          <p className="text-school-grey-500">Create your first announcement to get started</p>
+          <h3 className="text-lg font-medium text-school-grey-600 dark:text-gray-300 mb-2">No announcements found</h3>
+          <p className="text-school-grey-500 dark:text-gray-400">Create your first announcement to get started</p>
         </div>
       )}
 
@@ -257,7 +257,7 @@ export default function AdminAnnouncements() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-school-grey-700 mb-2">Title</label>
+            <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Title</label>
             <input
               type="text"
               value={formData.title}
@@ -270,7 +270,7 @@ export default function AdminAnnouncements() {
 
           {/* Content */}
           <div>
-            <label className="block text-sm font-medium text-school-grey-700 mb-2">Content</label>
+            <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Content</label>
             <textarea
               value={formData.content}
               onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -283,11 +283,11 @@ export default function AdminAnnouncements() {
           {/* Category & Priority */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-school-grey-700 mb-2">Category</label>
+              <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Category</label>
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all"
               >
                 {ANNOUNCEMENT_CATEGORIES.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -295,11 +295,11 @@ export default function AdminAnnouncements() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-school-grey-700 mb-2">Priority</label>
+              <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Priority</label>
               <select
                 value={formData.priority}
                 onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all"
               >
                 {ANNOUNCEMENT_PRIORITIES.map(pri => (
                   <option key={pri} value={pri}>{pri.charAt(0).toUpperCase() + pri.slice(1)}</option>
@@ -310,7 +310,7 @@ export default function AdminAnnouncements() {
 
           {/* Image URL */}
           <div>
-            <label className="block text-sm font-medium text-school-grey-700 mb-2">Image URL (optional)</label>
+            <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Image URL (optional)</label>
             <input
               type="url"
               value={formData.image || ''}
@@ -322,7 +322,7 @@ export default function AdminAnnouncements() {
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-school-grey-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">Status</label>
             <div className="flex space-x-4">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -333,7 +333,7 @@ export default function AdminAnnouncements() {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="text-university-red focus:ring-university-red"
                 />
-                <span className="text-school-grey-700">Save as Draft</span>
+                <span className="text-school-grey-700 dark:text-gray-300">Save as Draft</span>
               </label>
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -344,7 +344,7 @@ export default function AdminAnnouncements() {
                   onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                   className="text-university-red focus:ring-university-red"
                 />
-                <span className="text-school-grey-700">Publish Now</span>
+                <span className="text-school-grey-700 dark:text-gray-300">Publish Now</span>
               </label>
             </div>
           </div>
@@ -354,7 +354,7 @@ export default function AdminAnnouncements() {
             <button
               type="button"
               onClick={resetForm}
-              className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+              className="px-6 py-3 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors"
             >
               Cancel
             </button>

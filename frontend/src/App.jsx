@@ -31,6 +31,7 @@ import AdminAnnouncements from './pages/admin/AdminAnnouncements'
 import AdminOrgChart from './pages/admin/AdminOrgChart'
 import AdminReports from './pages/admin/AdminReports'
 import AdminSiteContent from './pages/admin/AdminSiteContent'
+import AdminSettings from './pages/admin/AdminSettings'
 
 // Page transition variants
 const pageVariants = {
@@ -229,7 +230,7 @@ function App() {
             <Route path="reports" element={<AdminReports />} />
             <Route path="documents" element={<AdminReports />} />
             <Route path="site-content" element={<AdminSiteContent />} />
-            <Route path="settings" element={<AdminDashboard />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
           
           {/* Public Routes with Public Layout */}

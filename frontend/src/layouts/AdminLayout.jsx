@@ -24,9 +24,8 @@ const navItems = [
   { name: 'Feedback (TINIG DINIG)', icon: MessageSquare, path: '/admin/feedback' },
   { name: 'Announcements', icon: Megaphone, path: '/admin/announcements' },
   { name: 'Organizational Chart', icon: Users, path: '/admin/orgchart' },
-  { name: 'Financial Reports', icon: DollarSign, path: '/admin/reports' },
-  { name: 'Documents', icon: FileText, path: '/admin/documents' },
-  { name: 'Site Content', icon: FileText, path: '/admin/site-content' },
+  { name: 'Issuances & Reports', icon: DollarSign, path: '/admin/reports' },
+  { name: 'Homepage Content', icon: FileText, path: '/admin/site-content' },
 ]
 
 export default function AdminLayout() {
@@ -35,6 +34,45 @@ export default function AdminLayout() {
   const { user, signOut, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+
+  // Load dark mode preference immediately and listen for changes
+  useEffect(() => {
+    // Apply dark mode immediately on mount
+    const applyDarkMode = () => {
+      const darkMode = localStorage.getItem('admin-dark-mode') === 'true'
+      console.log('AdminLayout applying dark mode:', darkMode)
+      if (darkMode) {
+        document.documentElement.classList.add('dark')
+      } else {
+        document.documentElement.classList.remove('dark')
+      }
+    }
+
+    // Apply on mount
+    applyDarkMode()
+
+    // Listen for storage changes (when changed in another tab/window)
+    const handleStorageChange = (e) => {
+      if (e.key === 'admin-dark-mode') {
+        console.log('Dark mode changed in another tab:', e.newValue)
+        applyDarkMode()
+      }
+    }
+
+    // Listen for custom dark mode event (when changed in same tab)
+    const handleDarkModeChange = (e) => {
+      console.log('Dark mode changed via custom event:', e.detail.darkMode)
+      applyDarkMode()
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('darkModeChanged', handleDarkModeChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('darkModeChanged', handleDarkModeChange)
+    }
+  }, [])
 
   // Redirect if not admin
   useEffect(() => {
@@ -54,7 +92,7 @@ export default function AdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-school-grey-50">
+    <div className="min-h-screen bg-school-grey-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -64,21 +102,21 @@ export default function AdminLayout() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed top-0 right-0 lg:left-0 lg:right-auto z-50 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
+      <aside className={`fixed top-0 right-0 lg:left-0 lg:right-auto z-50 h-full w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-all duration-300 ${sidebarOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="flex items-center justify-between p-6 border-b border-school-grey-100">
+          <div className="flex items-center justify-between p-6 border-b border-school-grey-100 dark:border-gray-700">
             <div className="flex items-center space-x-3">
               <img src={USGLogo} alt="USG Logo" className="w-10 h-10" />
               <div>
-                <h1 className="font-bold text-school-grey-800">USG Admin</h1>
-                <p className="text-xs text-school-grey-500">Dashboard</p>
+                <h1 className="font-bold text-school-grey-800 dark:text-white">USG Admin</h1>
+                <p className="text-xs text-school-grey-500 dark:text-gray-400">Dashboard</p>
               </div>
             </div>
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setSidebarOpen(false)}
-              className="lg:hidden p-2 rounded-lg text-school-grey-600 hover:bg-school-grey-100 transition-colors"
+              className="lg:hidden p-2 rounded-lg text-school-grey-600 dark:text-gray-400 hover:bg-school-grey-100 dark:hover:bg-gray-700 transition-colors"
             >
               <X className="w-6 h-6" />
             </motion.button>
@@ -96,7 +134,7 @@ export default function AdminLayout() {
                   className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
                     isActive 
                       ? 'bg-university-red text-white shadow-lg shadow-university-red/30' 
-                      : 'text-school-grey-600 hover:bg-school-grey-100'
+                      : 'text-school-grey-600 dark:text-gray-300 hover:bg-school-grey-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
@@ -107,14 +145,14 @@ export default function AdminLayout() {
           </nav>
 
           {/* Bottom Section */}
-          <div className="p-4 border-t border-school-grey-100 space-y-1">
+          <div className="p-4 border-t border-school-grey-100 dark:border-gray-700 space-y-1">
             <Link
               to="/admin/settings"
               onClick={() => setSidebarOpen(false)}
               className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all ${
                 location.pathname === '/admin/settings'
                   ? 'bg-university-red text-white shadow-lg shadow-university-red/30'
-                  : 'text-school-grey-600 hover:bg-school-grey-100'
+                  : 'text-school-grey-600 dark:text-gray-300 hover:bg-school-grey-100 dark:hover:bg-gray-700'
               }`}
             >
               <Settings className="w-5 h-5" />
@@ -122,7 +160,7 @@ export default function AdminLayout() {
             </Link>
             <Link
               to="/"
-              className="flex items-center space-x-3 px-4 py-3 text-school-grey-600 hover:bg-school-grey-100 rounded-xl transition-all"
+              className="flex items-center space-x-3 px-4 py-3 text-school-grey-600 dark:text-gray-300 hover:bg-school-grey-100 dark:hover:bg-gray-700 rounded-xl transition-all"
             >
               <Home className="w-5 h-5" />
               <span className="font-medium">Back to Website</span>
@@ -132,7 +170,7 @@ export default function AdminLayout() {
                 setSidebarOpen(false)
                 handleSignOut()
               }}
-              className="flex items-center space-x-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all w-full"
+              className="flex items-center space-x-3 px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-xl transition-all w-full"
             >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Sign Out</span>
@@ -144,17 +182,17 @@ export default function AdminLayout() {
       {/* Main Content */}
       <div className="lg:ml-72">
         {/* Top Header */}
-        <header className="sticky top-0 z-30 bg-white border-b border-school-grey-100">
+        <header className="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-school-grey-100 dark:border-gray-700 transition-colors">
           <div className="flex items-center justify-between px-6 py-4">
             {/* Page Title */}
-            <h2 className="text-xl font-bold text-school-grey-800">
+            <h2 className="text-xl font-bold text-school-grey-800 dark:text-white">
               {navItems.find(item => item.path === location.pathname)?.name || 'Dashboard'}
             </h2>
 
             {/* Right Side */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Notifications */}
-              <button className="relative p-2 text-school-grey-600 hover:text-school-grey-800 hover:bg-school-grey-100 rounded-full transition-colors">
+              <button className="relative p-2 text-school-grey-600 dark:text-gray-300 hover:text-school-grey-800 dark:hover:text-white hover:bg-school-grey-100 dark:hover:bg-gray-700 rounded-full transition-colors">
                 <Bell className="w-5 h-5" />
                 <span className="absolute top-1 right-1 w-2 h-2 bg-university-red rounded-full" />
               </button>
@@ -165,19 +203,19 @@ export default function AdminLayout() {
                   A
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-school-grey-800">Admin</p>
-                  <p className="text-xs text-school-grey-500">{user?.email || 'admin@unc.edu.ph'}</p>
+                  <p className="text-sm font-medium text-school-grey-800 dark:text-white">Admin</p>
+                  <p className="text-xs text-school-grey-500 dark:text-gray-400">{user?.email || 'admin@unc.edu.ph'}</p>
                 </div>
               </div>
 
               {/* Divider */}
-              <div className="hidden sm:block w-px h-6 bg-school-grey-200"></div>
+              <div className="hidden sm:block w-px h-6 bg-school-grey-200 dark:bg-gray-600"></div>
 
               {/* Mobile Menu Button */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => setSidebarOpen(true)}
-                className="lg:hidden p-2 rounded-lg text-school-grey-600 hover:bg-school-grey-100 transition-colors"
+                className="lg:hidden p-2 rounded-lg text-school-grey-600 dark:text-gray-300 hover:bg-school-grey-100 dark:hover:bg-gray-700 transition-colors"
               >
                 <Menu className="w-6 h-6" />
               </motion.button>

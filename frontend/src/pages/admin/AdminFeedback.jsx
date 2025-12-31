@@ -87,7 +87,7 @@ export default function AdminFeedback() {
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 text-university-red animate-spin mx-auto mb-4" />
-          <p className="text-school-grey-600">Loading feedback...</p>
+          <p className="text-school-grey-600 dark:text-gray-400">Loading feedback...</p>
         </div>
       </div>
     )
@@ -98,11 +98,11 @@ export default function AdminFeedback() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-school-grey-800">TINIG DINIG Feedback</h1>
-          <p className="text-school-grey-500">Manage and respond to student feedback</p>
+          <h1 className="text-2xl font-bold text-school-grey-800 dark:text-white">TINIG DINIG Feedback</h1>
+          <p className="text-school-grey-500 dark:text-gray-400">Manage and respond to student feedback</p>
         </div>
         <div className="flex items-center space-x-3">
-          <button className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors">
+          <button className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-200 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors">
             <Download className="w-4 h-4" />
             <span>Export</span>
           </button>
@@ -132,17 +132,17 @@ export default function AdminFeedback() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-2xl shadow-sm border border-school-grey-100 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-4 transition-colors">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Search */}
           <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search feedback..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all text-school-grey-800 dark:text-white placeholder-school-grey-400 dark:placeholder-gray-500"
             />
           </div>
 
@@ -167,7 +167,7 @@ export default function AdminFeedback() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="appearance-none px-4 py-3 pr-10 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+              className="appearance-none px-4 py-3 pr-10 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all"
             >
               {categoryOptions.map((category) => (
                 <option key={category} value={category}>{category}</option>
@@ -179,20 +179,20 @@ export default function AdminFeedback() {
       </div>
 
       {/* Feedback List */}
-      <div className="bg-white rounded-2xl shadow-sm border border-school-grey-100 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 overflow-hidden transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-school-grey-50 border-b border-school-grey-100">
+            <thead className="bg-school-grey-50 dark:bg-gray-700 border-b border-school-grey-100 dark:border-gray-600">
               <tr>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Subject</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Category</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Submitted By</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Date</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Status</th>
-                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600">Actions</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Subject</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Category</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Submitted By</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Date</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Status</th>
+                <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-school-grey-100">
+            <tbody className="divide-y divide-school-grey-100 dark:divide-gray-700">
               {filteredFeedback.map((item) => {
                 const StatusIcon = getStatusIcon(item.status)
                 return (
@@ -200,28 +200,28 @@ export default function AdminFeedback() {
                     key={item.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="hover:bg-school-grey-50 transition-colors"
+                    className="hover:bg-school-grey-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <td className="px-6 py-4">
                       <div className="max-w-xs">
-                        <p className="font-medium text-school-grey-800 truncate">{item.subject}</p>
-                        <p className="text-sm text-school-grey-500 truncate">{item.message.substring(0, 50)}...</p>
+                        <p className="font-medium text-school-grey-800 dark:text-white truncate">{item.subject}</p>
+                        <p className="text-sm text-school-grey-500 dark:text-gray-400 truncate">{item.message.substring(0, 50)}...</p>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="px-3 py-1 bg-school-grey-100 text-school-grey-700 rounded-full text-sm">
+                      <span className="px-3 py-1 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-full text-sm">
                         {item.category}
                       </span>
                     </td>
                     <td className="px-6 py-4">
                       <div>
-                        <p className="font-medium text-school-grey-800">
+                        <p className="font-medium text-school-grey-800 dark:text-white">
                           {item.isAnonymous ? 'Anonymous' : item.fullName}
                         </p>
-                        <p className="text-sm text-school-grey-500">{item.college}</p>
+                        <p className="text-sm text-school-grey-500 dark:text-gray-400">{item.college}</p>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-school-grey-600">
+                    <td className="px-6 py-4 text-sm text-school-grey-600 dark:text-gray-400">
                       {formatDate(item.createdAt)}
                     </td>
                     <td className="px-6 py-4">
@@ -257,9 +257,9 @@ export default function AdminFeedback() {
 
         {filteredFeedback.length === 0 && (
           <div className="text-center py-12">
-            <MessageSquare className="w-12 h-12 text-school-grey-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-school-grey-600 mb-2">No feedback found</h3>
-            <p className="text-school-grey-500">Try adjusting your search or filters</p>
+            <MessageSquare className="w-12 h-12 text-school-grey-300 dark:text-gray-600 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-school-grey-600 dark:text-gray-300 mb-2">No feedback found</h3>
+            <p className="text-school-grey-500 dark:text-gray-400">Try adjusting your search or filters</p>
           </div>
         )}
       </div>
@@ -283,40 +283,40 @@ export default function AdminFeedback() {
 
             {/* Subject */}
             <div>
-              <h3 className="text-lg font-bold text-school-grey-800 mb-2">{selectedFeedback.subject}</h3>
-              <span className="px-3 py-1 bg-school-grey-100 text-school-grey-700 rounded-full text-sm">
+              <h3 className="text-lg font-bold text-school-grey-800 dark:text-white mb-2">{selectedFeedback.subject}</h3>
+              <span className="px-3 py-1 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-full text-sm">
                 {selectedFeedback.category}
               </span>
             </div>
 
             {/* Message */}
-            <div className="bg-school-grey-50 rounded-xl p-4">
-              <p className="text-school-grey-700 leading-relaxed">{selectedFeedback.message}</p>
+            <div className="bg-school-grey-50 dark:bg-gray-700 rounded-xl p-4">
+              <p className="text-school-grey-700 dark:text-gray-300 leading-relaxed">{selectedFeedback.message}</p>
             </div>
 
             {/* Submitter Info */}
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium text-school-grey-500">Submitted By</label>
-                <p className="text-school-grey-800 font-medium">
+                <label className="text-sm font-medium text-school-grey-500 dark:text-gray-400">Submitted By</label>
+                <p className="text-school-grey-800 dark:text-white font-medium">
                   {selectedFeedback.isAnonymous ? 'Anonymous' : selectedFeedback.fullName}
                 </p>
               </div>
               {!selectedFeedback.isAnonymous && (
                 <>
                   <div>
-                    <label className="text-sm font-medium text-school-grey-500">Email</label>
-                    <p className="text-school-grey-800">{selectedFeedback.email}</p>
+                    <label className="text-sm font-medium text-school-grey-500 dark:text-gray-400">Email</label>
+                    <p className="text-school-grey-800 dark:text-white">{selectedFeedback.email}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-medium text-school-grey-500">Student ID</label>
-                    <p className="text-school-grey-800">{selectedFeedback.studentId}</p>
+                    <label className="text-sm font-medium text-school-grey-500 dark:text-gray-400">Student ID</label>
+                    <p className="text-school-grey-800 dark:text-white">{selectedFeedback.studentId}</p>
                   </div>
                 </>
               )}
               <div>
-                <label className="text-sm font-medium text-school-grey-500">College</label>
-                <p className="text-school-grey-800">{selectedFeedback.college}</p>
+                <label className="text-sm font-medium text-school-grey-500 dark:text-gray-400">College</label>
+                <p className="text-school-grey-800 dark:text-white">{selectedFeedback.college}</p>
               </div>
             </div>
 
@@ -355,7 +355,7 @@ export default function AdminFeedback() {
             <div className="flex justify-end space-x-3 pt-4">
               <button
                 onClick={() => setShowModal(false)}
-                className="px-6 py-2 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+                className="px-6 py-2 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors"
               >
                 Cancel
               </button>

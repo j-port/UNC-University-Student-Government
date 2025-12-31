@@ -149,18 +149,18 @@ export default function AdminDashboard() {
             transition={{ delay: index * 0.1 }}
           >
             <Link to={stat.path}>
-              <div className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg transition-shadow border border-school-grey-100">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm hover:shadow-lg transition-all border border-school-grey-100 dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
                   <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className={`flex items-center space-x-1 text-sm font-medium ${stat.trend === 'up' ? 'text-green-600' : 'text-orange-600'}`}>
+                  <div className={`flex items-center space-x-1 text-sm font-medium ${stat.trend === 'up' ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}`}>
                     {stat.trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     <span>{stat.change}</span>
                   </div>
                 </div>
-                <h3 className="text-3xl font-bold text-school-grey-800 mb-1">{stat.value}</h3>
-                <p className="text-school-grey-500 text-sm">{stat.name}</p>
+                <h3 className="text-3xl font-bold text-school-grey-800 dark:text-white mb-1">{stat.value}</h3>
+                <p className="text-school-grey-500 dark:text-gray-400 text-sm">{stat.name}</p>
               </div>
             </Link>
           </motion.div>
@@ -173,12 +173,12 @@ export default function AdminDashboard() {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-school-grey-100"
+          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 transition-colors"
         >
-          <div className="p-6 border-b border-school-grey-100 flex items-center justify-between">
+          <div className="p-6 border-b border-school-grey-100 dark:border-gray-700 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-school-grey-800">Recent TINIG DINIG Feedback</h2>
-              <p className="text-sm text-school-grey-500">Latest submissions from students</p>
+              <h2 className="text-lg font-bold text-school-grey-800 dark:text-white">Recent TINIG DINIG Feedback</h2>
+              <p className="text-sm text-school-grey-500 dark:text-gray-400">Latest submissions from students</p>
             </div>
             <Link 
               to="/admin/feedback" 
@@ -189,13 +189,13 @@ export default function AdminDashboard() {
             </Link>
           </div>
           
-          <div className="divide-y divide-school-grey-100">
+          <div className="divide-y divide-school-grey-100 dark:divide-gray-700">
             {recentFeedback.map((feedback) => {
               const StatusIcon = getStatusIcon(feedback.status)
               return (
                 <div 
                   key={feedback.id} 
-                  className="p-4 hover:bg-school-grey-50 transition-colors cursor-pointer"
+                  className="p-4 hover:bg-school-grey-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -204,14 +204,14 @@ export default function AdminDashboard() {
                           <StatusIcon className="w-3 h-3 inline mr-1" />
                           {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1)}
                         </span>
-                        <span className="text-xs text-school-grey-500 bg-school-grey-100 px-2 py-1 rounded-full">
+                        <span className="text-xs text-school-grey-500 dark:text-gray-400 bg-school-grey-100 dark:bg-gray-700 px-2 py-1 rounded-full">
                           {feedback.category}
                         </span>
                       </div>
-                      <h3 className="font-medium text-school-grey-800 mb-1">{feedback.subject}</h3>
-                      <p className="text-sm text-school-grey-500">{feedback.college}</p>
+                      <h3 className="font-medium text-school-grey-800 dark:text-white mb-1">{feedback.subject}</h3>
+                      <p className="text-sm text-school-grey-500 dark:text-gray-400">{feedback.college}</p>
                     </div>
-                    <span className="text-xs text-school-grey-400">{feedback.date}</span>
+                    <span className="text-xs text-school-grey-400 dark:text-gray-500">{feedback.date}</span>
                   </div>
                 </div>
               )
@@ -225,9 +225,9 @@ export default function AdminDashboard() {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-2xl shadow-sm border border-school-grey-100 p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
           >
-            <h2 className="text-lg font-bold text-school-grey-800 mb-4">Quick Actions</h2>
+            <h2 className="text-lg font-bold text-school-grey-800 dark:text-white mb-4">Quick Actions</h2>
             <div className="space-y-3">
               <Link 
                 to="/admin/announcements"
@@ -265,18 +265,18 @@ export default function AdminDashboard() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-sm border border-school-grey-100 p-6"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
           >
-            <h2 className="text-lg font-bold text-school-grey-800 mb-4">Upcoming Events</h2>
+            <h2 className="text-lg font-bold text-school-grey-800 dark:text-white mb-4">Upcoming Events</h2>
             <div className="space-y-4">
               {upcomingEvents.map((event, index) => (
                 <div key={index} className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-school-grey-100 rounded-xl flex items-center justify-center">
-                    <Calendar className="w-5 h-5 text-school-grey-600" />
+                  <div className="w-12 h-12 bg-school-grey-100 dark:bg-gray-700 rounded-xl flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-school-grey-600 dark:text-gray-300" />
                   </div>
                   <div>
-                    <h3 className="font-medium text-school-grey-800 text-sm">{event.name}</h3>
-                    <p className="text-xs text-school-grey-500">{event.date} • {event.type}</p>
+                    <h3 className="font-medium text-school-grey-800 dark:text-white text-sm">{event.name}</h3>
+                    <p className="text-xs text-school-grey-500 dark:text-gray-400">{event.date} • {event.type}</p>
                   </div>
                 </div>
               ))}

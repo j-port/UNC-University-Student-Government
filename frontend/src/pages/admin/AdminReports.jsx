@@ -174,8 +174,8 @@ export default function AdminReports() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-school-grey-800">Issuances & Reports</h1>
-          <p className="text-school-grey-500">Upload and manage official documents and reports</p>
+          <h1 className="text-2xl font-bold text-school-grey-800 dark:text-white">Issuances & Reports</h1>
+          <p className="text-school-grey-500 dark:text-gray-400">Upload and manage official documents and reports</p>
         </div>
         <button
           onClick={() => setShowUpload(true)}
@@ -190,12 +190,12 @@ export default function AdminReports() {
       {loading ? (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-university-red mx-auto"></div>
-          <p className="mt-4 text-school-grey-600">Loading reports...</p>
+          <p className="mt-4 text-school-grey-600 dark:text-gray-400">Loading reports...</p>
         </div>
       ) : filteredIssuances.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-school-grey-100">
-          <FileText className="w-16 h-16 text-school-grey-300 mx-auto mb-4" />
-          <p className="text-school-grey-600">No reports uploaded yet</p>
+        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-2xl border border-school-grey-100 dark:border-gray-700 transition-colors">
+          <FileText className="w-16 h-16 text-school-grey-300 dark:text-gray-600 mx-auto mb-4" />
+          <p className="text-school-grey-600 dark:text-gray-400">No reports uploaded yet</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -204,7 +204,7 @@ export default function AdminReports() {
               key={report.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-sm border border-school-grey-100 p-6 hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-6 hover:shadow-md transition-all"
             >
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div className="flex-1">
@@ -223,29 +223,29 @@ export default function AdminReports() {
                       {report.status === 'published' ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                       <span>{report.status === 'published' ? 'Published' : 'Draft'}</span>
                     </button>
-                    <span className="flex items-center text-school-grey-500 text-sm">
+                    <span className="flex items-center text-school-grey-500 dark:text-gray-400 text-sm">
                       <Calendar className="w-4 h-4 mr-1" />
                       {formatDate(report.published_at || report.created_at)}
                     </span>
                   </div>
-                  <h3 className="font-semibold text-lg text-school-grey-800">
+                  <h3 className="font-semibold text-lg text-school-grey-800 dark:text-white">
                     {report.title}
                   </h3>
                   <button
                     onClick={() => handleView(report)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 text-school-grey-700 rounded-lg hover:bg-university-red hover:text-white transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-lg hover:bg-university-red hover:text-white transition-colors"
                   >
                     <Eye className="w-4 h-4" />
                     <span className="text-sm font-medium">View</span>
                   </button>
-                  <p className="text-school-grey-400 text-xs mt-2">
+                  <p className="text-school-grey-400 dark:text-gray-500 text-xs mt-2">
                     {report.file_name} • {formatFileSize(report.file_size)}
                   </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => handleDownload(report.file_url, report.file_name)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 text-school-grey-700 rounded-lg hover:bg-university-red hover:text-white transition-colors"
+                    className="flex items-center space-x-2 px-4 py-2 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-300 rounded-lg hover:bg-university-red hover:text-white transition-colors"
                   >
                     <Download className="w-4 h-4" />
                     <span className="text-sm font-medium">Download</span>
@@ -269,11 +269,11 @@ export default function AdminReports() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transition-colors"
           >
             <div className="p-6 border-b border-school-grey-100">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-school-grey-800">Upload Document</h2>
+                <h2 className="text-xl font-bold text-school-grey-800 dark:text-white">Upload Document</h2>
                 <button
                   onClick={() => setShowUpload(false)}
                   className="text-school-grey-400 hover:text-school-grey-600"
@@ -285,7 +285,7 @@ export default function AdminReports() {
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                   Document Title *
                 </label>
                 <input
@@ -299,26 +299,26 @@ export default function AdminReports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                   Description
                 </label>
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all resize-none h-24"
+                  className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white dark:placeholder-gray-400 transition-all resize-none h-24"
                   placeholder="Brief description of the document..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                   Document Type *
                 </label>
                 <select
                   required
                   value={formData.type}
                   onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                  className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all"
                 >
                   {ISSUANCE_TYPES.map(type => (
                     <option key={type} value={type}>{type}</option>
@@ -327,7 +327,7 @@ export default function AdminReports() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">
+                <label className="block text-sm font-medium text-school-grey-700 dark:text-gray-300 mb-2">
                   Upload File * (Max 10MB)
                 </label>
                 <input
@@ -335,7 +335,7 @@ export default function AdminReports() {
                   required
                   onChange={handleFileChange}
                   accept=".pdf,.doc,.docx,.xls,.xlsx"
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                  className="w-full px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all"
                 />
                 {formData.file && (
                   <p className="mt-2 text-sm text-school-grey-600">
@@ -372,7 +372,7 @@ export default function AdminReports() {
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-6xl h-[90vh] flex flex-col transition-colors"
           >
             {/* Header */}
             <div className="p-6 border-b border-school-grey-100 flex items-center justify-between">
