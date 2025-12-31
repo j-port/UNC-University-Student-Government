@@ -6,7 +6,8 @@ import { supabase } from "./supabase";
 export const submitFeedback = async (feedbackData) => {
     const { data, error } = await supabase
         .from("feedback")
-        .insert([feedbackData]);
+        .insert([feedbackData])
+        .select();
 
     return { data, error };
 };

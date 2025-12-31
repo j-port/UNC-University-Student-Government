@@ -34,16 +34,13 @@ const colleges = [
 ]
 
 const categories = [
-  { value: 'academic', label: 'Academic Concerns' },
-  { value: 'facilities', label: 'Facilities & Infrastructure' },
-  { value: 'student-services', label: 'Student Services' },
-  { value: 'events', label: 'Events & Activities' },
-  { value: 'policy', label: 'Policy & Governance' },
-  { value: 'financial', label: 'Financial Matters' },
-  { value: 'safety', label: 'Safety & Security' },
-  { value: 'suggestion', label: 'Suggestions & Ideas' },
-  { value: 'compliment', label: 'Compliments & Recognition' },
-  { value: 'other', label: 'Other Concerns' },
+  { value: 'Academic', label: 'Academic Concerns' },
+  { value: 'Facilities', label: 'Facilities & Infrastructure' },
+  { value: 'Student Welfare', label: 'Student Services & Welfare' },
+  { value: 'Governance', label: 'Policy & Governance' },
+  { value: 'Financial', label: 'Financial Matters' },
+  { value: 'Suggestion', label: 'Suggestions & Ideas' },
+  { value: 'Other', label: 'Other Concerns' },
 ]
 
 const contactInfo = [
@@ -186,10 +183,7 @@ export default function Feedback() {
     setStatus({ type: '', message: '' })
 
     try {
-      // Generate reference number first
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
-      const tempId = Date.now().toString().slice(-6) // Temporary ID for reference generation
-      
+      // Insert feedback first
       const { data, error } = await submitFeedback({
         name: formData.fullName,
         email: formData.email,
@@ -208,22 +202,35 @@ export default function Feedback() {
         throw error
       }
 
-      // Generate reference number with actual database ID
-      const feedbackId = data && data[0] ? data[0].id : tempId
-      const referenceNumber = `TNG-${dateStr}-${feedbackId}`
-
-      // Update the record with the reference number
+      // Generate short, unique reference number (race-condition-free)
       if (data && data[0]) {
-        await supabase
+        const now = new Date()
+        const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
+        
+        // Use timestamp + random for uniqueness: TNG-YYYYMMDD-HHMM-RR
+        // HH = hour (00-23), MM = minute (00-59), RR = random 2-digit
+        const hours = String(now.getHours()).padStart(2, '0')
+        const minutes = String(now.getMinutes()).padStart(2, '0')
+        const random = String(Math.floor(Math.random() * 100)).padStart(2, '0')
+        
+        const referenceNumber = `TNG-${dateStr}-${hours}${minutes}${random}`
+
+        // Update the record with the reference number
+        const { error: updateError } = await supabase
           .from('feedback')
           .update({ reference_number: referenceNumber })
           .eq('id', data[0].id)
+        
+        if (updateError) {
+          console.error('Error updating reference number:', updateError)
+        }
+
+        setStatus({
+          type: 'success',
+          message: `Thank you for your feedback! Your reference number is ${referenceNumber}. We will review it and get back to you within 2-3 business days.`,
+        })
       }
 
-      setStatus({
-        type: 'success',
-        message: `Thank you for your feedback! Your reference number is ${referenceNumber}. We will review it and get back to you within 2-3 business days.`,
-      })
       setFormData({
         fullName: '',
         email: '',

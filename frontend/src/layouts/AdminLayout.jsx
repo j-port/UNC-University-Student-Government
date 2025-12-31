@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link, useNavigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useNotifications } from '../hooks/useNotifications'
+import NotificationPanel from '../components/admin/NotificationPanel'
 import { 
   LayoutDashboard, 
   MessageSquare, 
@@ -31,9 +33,20 @@ const navItems = [
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [notificationPanelOpen, setNotificationPanelOpen] = useState(false)
   const { user, signOut, isAdmin } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  
+  // Initialize notifications
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    clearNotification,
+    clearAll
+  } = useNotifications()
 
   // Load dark mode preference immediately and listen for changes
   useEffect(() => {
@@ -192,10 +205,36 @@ export default function AdminLayout() {
             {/* Right Side */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Notifications */}
-              <button className="relative p-2 text-school-grey-600 dark:text-gray-300 hover:text-school-grey-800 dark:hover:text-white hover:bg-school-grey-100 dark:hover:bg-gray-700 rounded-full transition-colors">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-university-red rounded-full" />
-              </button>
+              <div className="relative">
+                <motion.button 
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setNotificationPanelOpen(!notificationPanelOpen)}
+                  className="relative p-2 text-school-grey-600 dark:text-gray-300 hover:text-school-grey-800 dark:hover:text-white hover:bg-school-grey-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <motion.span
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] bg-university-red text-white text-xs font-bold rounded-full flex items-center justify-center px-1"
+                    >
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </motion.span>
+                  )}
+                </motion.button>
+
+                {/* Notification Panel */}
+                <NotificationPanel
+                  notifications={notifications}
+                  unreadCount={unreadCount}
+                  onMarkAsRead={markAsRead}
+                  onMarkAllAsRead={markAllAsRead}
+                  onClear={clearNotification}
+                  onClearAll={clearAll}
+                  isOpen={notificationPanelOpen}
+                  onClose={() => setNotificationPanelOpen(false)}
+                />
+              </div>
 
               {/* User Info */}
               <div className="flex items-center space-x-2 sm:space-x-3 p-2">

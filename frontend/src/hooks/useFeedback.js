@@ -137,5 +137,6 @@ export function useFeedback() {
         updateStatus,
         remove,
         reload,
+        fetchFeedback,
     };
 }
