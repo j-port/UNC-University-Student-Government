@@ -15,8 +15,10 @@ import {
 } from 'lucide-react'
 import USGLogo from '../assets/USG LOGO NO BG.png'
 import CampusBg from '../assets/USG COVER.jpg'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { useSiteContent } from '../hooks/useSiteContent'
+import { useAutomatedStats } from '../hooks/useAutomatedStats'
+import { fetchAnnouncements } from '../api'
 
 const defaultFeatures = [
   {
@@ -95,11 +97,22 @@ const floatAnimation = {
 
 export default function Hero() {
   const { content } = useSiteContent()
+  const automatedStats = useAutomatedStats()
   const ref = useRef(null)
+  const [announcements, setAnnouncements] = useState([])
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
   })
+
+  // Fetch latest 3 announcements for preview
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      const { data } = await fetchAnnouncements({ status: 'published', limit: 3 })
+      setAnnouncements(data || [])
+    }
+    loadAnnouncements()
+  }, [])
   
   // Disable parallax on mobile for better UX
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
@@ -107,13 +120,23 @@ export default function Hero() {
   const textY = useTransform(scrollYProgress, [0, 1], isMobile ? ['0%', '0%'] : ['0%', '100%'])
   const opacity = useTransform(scrollYProgress, [0, 0.5], isMobile ? [1, 1] : [1, 0])
 
-  // Use dynamic stats from database or fall back to defaults
+  // Use dynamic stats from database, with automated counts merged in
   const stats = content.heroStats?.length > 0
-    ? content.heroStats.map(stat => ({
-        number: stat.value,
-        label: stat.label,
-        icon: iconMap[stat.icon] || Users,
-      }))
+    ? content.heroStats.map(stat => {
+        // Auto-replace "Programs & Events" with actual count from database
+        if (stat.section_key === 'programs-events' && !automatedStats.loading) {
+          return {
+            number: `${automatedStats.eventsCount}+`,
+            label: stat.label,
+            icon: iconMap[stat.icon] || Star,
+          }
+        }
+        return {
+          number: stat.value,
+          label: stat.label,
+          icon: iconMap[stat.icon] || Users,
+        }
+      })
     : defaultStats
 
   // Use dynamic features from database or fall back to defaults
@@ -511,32 +534,44 @@ export default function Hero() {
               </div>
               
               <div className="space-y-4">
-                {[
-                  { title: 'USG General Assembly 2025', date: 'January 15, 2025', type: 'Event' },
-                  { title: 'New Student ID Claiming Schedule', date: 'January 10, 2025', type: 'Notice' },
-                  { title: 'Scholarship Application Now Open', date: 'January 5, 2025', type: 'Announcement' },
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ x: 5 }}
-                    className="bg-school-grey-50 rounded-2xl p-5 cursor-pointer hover:bg-school-grey-100 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-xs font-semibold text-university-red bg-university-red/10 px-2 py-1 rounded-full">
-                          {item.type}
-                        </span>
-                        <h3 className="font-semibold text-school-grey-800 mt-2">{item.title}</h3>
-                        <p className="text-sm text-school-grey-500 mt-1">{item.date}</p>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-school-grey-400" />
-                    </div>
-                  </motion.div>
-                ))}
+                {announcements.length === 0 ? (
+                  <div className="bg-school-grey-50 rounded-2xl p-5 text-center">
+                    <p className="text-school-grey-500">No announcements available at the moment.</p>
+                  </div>
+                ) : (
+                  announcements.map((announcement, index) => (
+                    <Link 
+                      key={announcement.id}
+                      to={`/bulletins/announcement/${announcement.id}`}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ x: 5 }}
+                        className="bg-school-grey-50 rounded-2xl p-5 cursor-pointer hover:bg-school-grey-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-university-red bg-university-red/10 px-2 py-1 rounded-full capitalize">
+                              {announcement.category || 'Announcement'}
+                            </span>
+                            <h3 className="font-semibold text-school-grey-800 mt-2">{announcement.title}</h3>
+                            <p className="text-sm text-school-grey-500 mt-1">
+                              {new Date(announcement.created_at).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-school-grey-400" />
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ))
+                )}
               </div>
             </motion.div>
 

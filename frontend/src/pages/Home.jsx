@@ -3,6 +3,7 @@ import Hero from '../components/Hero'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Users, Award, TrendingUp, Heart } from 'lucide-react'
 import { useSiteContent } from '../hooks/useSiteContent'
+import { useAutomatedStats } from '../hooks/useAutomatedStats'
 import LoadingSpinner from '../components/LoadingSpinner'
 
 // Default fallback stats if database is empty
@@ -42,14 +43,33 @@ const itemVariants = {
 
 export default function Home() {
   const { content, loading, error } = useSiteContent()
+  const automatedStats = useAutomatedStats()
 
-  // Use dynamic stats from database or fall back to defaults
+  // Use dynamic stats from database, with automated counts merged in
   const stats = content.homeStats?.length > 0
-    ? content.homeStats.map(stat => ({
-        icon: iconMap[stat.icon] || Users,
-        value: stat.value,
-        label: stat.label,
-      }))
+    ? content.homeStats.map(stat => {
+        // Auto-replace "Projects Completed" with accomplishments count
+        if (stat.section_key === 'projects-completed' && !automatedStats.loading) {
+          return {
+            icon: iconMap[stat.icon] || Award,
+            value: `${automatedStats.accomplishmentsCount}+`,
+            label: stat.label,
+          }
+        }
+        // Auto-replace "Budget Managed" with calculated total
+        if (stat.section_key === 'budget-managed' && !automatedStats.loading) {
+          return {
+            icon: iconMap[stat.icon] || TrendingUp,
+            value: automatedStats.formattedBudget,
+            label: stat.label,
+          }
+        }
+        return {
+          icon: iconMap[stat.icon] || Users,
+          value: stat.value,
+          label: stat.label,
+        }
+      })
     : defaultStats
 
   // Get dynamic content or use defaults
