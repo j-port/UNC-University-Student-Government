@@ -46,6 +46,74 @@ app.post("/api/feedback", async (req, res) => {
             .select();
 
         if (error) throw error;
+
+        // Generate reference number
+        if (data && data[0]) {
+            const now = new Date();
+            const dateStr = now.toISOString().slice(0, 10).replace(/-/g, "");
+            const hours = String(now.getHours()).padStart(2, "0");
+            const minutes = String(now.getMinutes()).padStart(2, "0");
+            const random = String(Math.floor(Math.random() * 100)).padStart(
+                2,
+                "0"
+            );
+            const referenceNumber = `TNG-${dateStr}-${hours}${minutes}${random}`;
+
+            // Update with reference number
+            const { data: updatedData, error: updateError } = await supabase
+                .from("feedback")
+                .update({ reference_number: referenceNumber })
+                .eq("id", data[0].id)
+                .select();
+
+            if (updateError) throw updateError;
+            res.json({ success: true, data: updatedData });
+        } else {
+            res.json({ success: true, data });
+        }
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.put("/api/feedback/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { data, error } = await supabase
+            .from("feedback")
+            .update(req.body)
+            .eq("id", id)
+            .select();
+
+        if (error) throw error;
+        res.json({ success: true, data });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.delete("/api/feedback/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from("feedback").delete().eq("id", id);
+
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+app.get("/api/feedback/track/:referenceNumber", async (req, res) => {
+    try {
+        const { referenceNumber } = req.params;
+        const { data, error } = await supabase
+            .from("feedback")
+            .select("*")
+            .eq("reference_number", referenceNumber)
+            .single();
+
+        if (error) throw error;
         res.json({ success: true, data });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });

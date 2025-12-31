@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
-import { submitFeedback } from '../api'
-import { supabase } from '../lib/supabaseClient'
+import { feedbackAPI } from '../lib/api'
 import { 
   Send, 
   User, 
@@ -18,7 +17,9 @@ import {
   Search,
   Clock,
   Eye,
-  MessageSquare
+  MessageSquare,
+  Paperclip,
+  Download
 } from 'lucide-react'
 
 const colleges = [
@@ -82,6 +83,7 @@ export default function Feedback() {
     category: '',
     subject: '',
     message: '',
+    attachmentLink: '',
   })
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
@@ -107,38 +109,13 @@ export default function Feedback() {
     setTrackedFeedback(null)
 
     try {
-      const refNumber = trackingNumber.trim()
+      const response = await feedbackAPI.track(trackingNumber.trim())
       
-      // Query feedback by reference number
-      const { data, error } = await supabase
-        .from('feedback')
-        .select('*')
-        .eq('reference_number', refNumber)
-        .single()
-
-      if (error) {
-        // Fallback: try extracting ID from old format if reference_number field doesn't exist yet
-        const parts = refNumber.split('-')
-        if (parts.length === 3 && parts[0] === 'TNG') {
-          const feedbackId = parts[2]
-          const { data: fallbackData, error: fallbackError } = await supabase
-            .from('feedback')
-            .select('*')
-            .eq('id', feedbackId)
-            .single()
-          
-          if (fallbackError) throw new Error('Feedback not found. Please check your reference number.')
-          setTrackedFeedback(fallbackData)
-          return
-        }
-        throw error
-      }
-
-      if (!data) {
+      if (!response.success || !response.data) {
         throw new Error('Feedback not found. Please check your reference number.')
       }
 
-      setTrackedFeedback(data)
+      setTrackedFeedback(response.data)
     } catch (error) {
       console.error('Tracking error:', error)
       setTrackingError(error.message || 'Failed to track feedback. Please check your reference number.')
@@ -183,8 +160,8 @@ export default function Feedback() {
     setStatus({ type: '', message: '' })
 
     try {
-      // Insert feedback first
-      const { data, error } = await submitFeedback({
+      // Insert feedback with Google Drive link via backend API
+      const response = await feedbackAPI.create({
         name: formData.fullName,
         email: formData.email,
         student_id: formData.studentId,
@@ -192,44 +169,23 @@ export default function Feedback() {
         category: formData.category,
         subject: formData.subject,
         message: formData.message,
+        attachment_url: formData.attachmentLink || null,
         status: 'pending',
         is_anonymous: false,
         created_at: new Date().toISOString(),
       })
 
-      if (error) {
-        console.error('Submission error:', error)
-        throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to submit feedback')
       }
 
-      // Generate short, unique reference number (race-condition-free)
-      if (data && data[0]) {
-        const now = new Date()
-        const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '')
-        
-        // Use timestamp + random for uniqueness: TNG-YYYYMMDD-HHMM-RR
-        // HH = hour (00-23), MM = minute (00-59), RR = random 2-digit
-        const hours = String(now.getHours()).padStart(2, '0')
-        const minutes = String(now.getMinutes()).padStart(2, '0')
-        const random = String(Math.floor(Math.random() * 100)).padStart(2, '0')
-        
-        const referenceNumber = `TNG-${dateStr}-${hours}${minutes}${random}`
+      const feedbackData = response.data[0]
+      const referenceNumber = feedbackData.reference_number
 
-        // Update the record with the reference number
-        const { error: updateError } = await supabase
-          .from('feedback')
-          .update({ reference_number: referenceNumber })
-          .eq('id', data[0].id)
-        
-        if (updateError) {
-          console.error('Error updating reference number:', updateError)
-        }
-
-        setStatus({
-          type: 'success',
-          message: `Thank you for your feedback! Your reference number is ${referenceNumber}. We will review it and get back to you within 2-3 business days.`,
-        })
-      }
+      setStatus({
+        type: 'success',
+        message: `Thank you for your feedback! Your reference number is ${referenceNumber}. We will review it and get back to you within 2-3 business days.`,
+      })
 
       setFormData({
         fullName: '',
@@ -239,6 +195,7 @@ export default function Feedback() {
         category: '',
         subject: '',
         message: '',
+        attachmentLink: '',
       })
     } catch (error) {
       console.error('Error submitting feedback:', error)
@@ -356,6 +313,25 @@ export default function Feedback() {
                     <div className="bg-school-grey-50 rounded-xl p-4">
                       <p className="text-sm text-school-grey-700 leading-relaxed">{trackedFeedback.message}</p>
                     </div>
+
+                    {/* Attachment */}
+                    {trackedFeedback.attachment_url && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <h5 className="font-semibold text-blue-900 mb-2 flex items-center space-x-2">
+                          <Paperclip className="w-4 h-4" />
+                          <span>Attachment</span>
+                        </h5>
+                        <a
+                          href={trackedFeedback.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors border border-blue-300"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="text-sm font-medium">View/Download Attachment</span>
+                        </a>
+                      </div>
+                    )}
 
                     {/* Status Updates */}
                     <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
@@ -577,6 +553,25 @@ export default function Feedback() {
                       className="input-field resize-none"
                       required
                     />
+                  </div>
+
+                  {/* Row 6: Google Drive Link */}
+                  <div>
+                    <label htmlFor="attachmentLink" className="block text-sm font-medium text-school-grey-700 mb-2">
+                      Google Drive Link (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      id="attachmentLink"
+                      name="attachmentLink"
+                      value={formData.attachmentLink}
+                      onChange={handleChange}
+                      placeholder="https://drive.google.com/file/d/..."
+                      className="input-field"
+                    />
+                    <p className="mt-2 text-xs text-school-grey-500">
+                      💡 Upload your file to Google Drive, set sharing to "Anyone with the link", then paste the link here
+                    </p>
                   </div>
 
                   {/* Privacy Notice */}

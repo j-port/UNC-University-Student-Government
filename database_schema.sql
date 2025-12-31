@@ -272,6 +272,9 @@ CREATE TABLE IF NOT EXISTS feedback (
   subject TEXT NOT NULL,
   message TEXT NOT NULL,
   
+  -- Attachment (Google Drive link or file URL)
+  attachment_url TEXT,
+  
   -- Status tracking
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'responded', 'resolved')),
   response TEXT,
@@ -284,6 +287,7 @@ CREATE TABLE IF NOT EXISTS feedback (
 
 COMMENT ON TABLE feedback IS 'Stores student feedback submissions from TINIG DINIG system';
 COMMENT ON COLUMN feedback.reference_number IS 'Unique tracking reference number in format TNG-YYYYMMDD-ID';
+COMMENT ON COLUMN feedback.attachment_url IS 'URL to attached file (Google Drive link or storage URL)';
 COMMENT ON COLUMN feedback.is_anonymous IS 'True if feedback was submitted anonymously';
 COMMENT ON COLUMN feedback.status IS 'Feedback resolution status: pending, in_progress, responded, or resolved';
 
@@ -566,7 +570,7 @@ CREATE POLICY "Public read access"
   FOR SELECT 
   USING (true);
 
--- Feedback (only authenticated can read)
+-- Feedback (only authenticated can read all)
 DROP POLICY IF EXISTS "Admin read access" ON feedback;
 CREATE POLICY "Admin read access" 
   ON feedback 
@@ -574,12 +578,19 @@ CREATE POLICY "Admin read access"
   TO authenticated 
   USING (true);
 
--- Feedback (anyone can submit)
+-- Feedback (anyone can submit - explicit for all roles)
 DROP POLICY IF EXISTS "Public insert access" ON feedback;
 CREATE POLICY "Public insert access" 
   ON feedback 
   FOR INSERT 
   WITH CHECK (true);
+
+-- Feedback (public can read by reference number for tracking - explicit for all roles)
+DROP POLICY IF EXISTS "Public read by reference" ON feedback;
+CREATE POLICY "Public read by reference" 
+  ON feedback 
+  FOR SELECT 
+  USING (reference_number IS NOT NULL);
 
 -- Financial Transactions
 DROP POLICY IF EXISTS "Public read access" ON financial_transactions;

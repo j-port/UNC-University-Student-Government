@@ -8,6 +8,7 @@ import {
   Megaphone,
   TrendingUp,
   TrendingDown,
+  BarChart3,
   Eye,
   Clock,
   AlertCircle,
@@ -15,8 +16,7 @@ import {
   ArrowRight,
   Calendar,
   RefreshCw,
-  Activity,
-  BarChart3
+  Activity
 } from 'lucide-react'
 import { supabase } from '../../lib/supabaseClient'
 import LoadingSpinner from '../../components/LoadingSpinner'
@@ -70,7 +70,8 @@ export default function AdminDashboard() {
     lastMonth: 0,
     responseRate: 0,
     avgResponseTime: 0,
-    satisfactionRate: 0
+    satisfactionRate: 0,
+    monthlyCounts: [] // Array of last 6 months data
   })
 
   useEffect(() => {
@@ -154,6 +155,22 @@ export default function AdminDashboard() {
       // Mock satisfaction rate (could be calculated from feedback ratings if available)
       const satisfactionRate = 89
 
+      // Calculate last 6 months data for chart
+      const monthlyCounts = []
+      for (let i = 5; i >= 0; i--) {
+        const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1)
+        const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 0)
+        const count = feedbackData?.filter(f => {
+          const date = new Date(f.created_at)
+          return date >= monthStart && date <= monthEnd
+        }).length || 0
+        
+        monthlyCounts.push({
+          month: monthStart.toLocaleString('en-US', { month: 'short' }),
+          count: count
+        })
+      }
+
       setStats([
         { 
           name: 'Total Feedback', 
@@ -201,7 +218,8 @@ export default function AdminDashboard() {
         lastMonth: lastMonthFeedback,
         responseRate,
         avgResponseTime,
-        satisfactionRate
+        satisfactionRate,
+        monthlyCounts
       })
 
     } catch (error) {
@@ -305,88 +323,256 @@ export default function AdminDashboard() {
             ))}
           </div>
 
+          {/* Analytics Charts */}
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Category Distribution Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-purple-500/10 rounded-xl flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-school-grey-800 dark:text-white">Feedback by Category</h3>
+                    <p className="text-sm text-school-grey-500 dark:text-gray-400">Distribution overview</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-4">
+                {(() => {
+                  // Calculate category distribution from recent feedback
+                  const categoryCounts = {}
+                  const categoryColors = {
+                    'Academic': 'bg-blue-500',
+                    'Facilities': 'bg-green-500',
+                    'Financial': 'bg-yellow-500',
+                    'Student Welfare': 'bg-purple-500',
+                    'Governance': 'bg-red-500',
+                    'Suggestion': 'bg-indigo-500',
+                    'Other': 'bg-gray-500'
+                  }
+                  
+                  recentFeedback.forEach(item => {
+                    const category = item.category || 'Other'
+                    categoryCounts[category] = (categoryCounts[category] || 0) + 1
+                  })
+                  
+                  const total = Object.values(categoryCounts).reduce((a, b) => a + b, 0) || 1
+                  
+                  // If no feedback, show placeholder
+                  if (total === 0) {
+                    return (
+                      <div className="text-center py-8 text-school-grey-500 dark:text-gray-400">
+                        <p className="text-sm">No feedback data available yet</p>
+                      </div>
+                    )
+                  }
+                  
+                  return Object.entries(categoryCounts).map(([category, count]) => (
+                    <div key={category}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-school-grey-700 dark:text-gray-300">{category}</span>
+                        <span className="text-sm font-bold text-school-grey-800 dark:text-white">{count} ({Math.round((count / total) * 100)}%)</span>
+                      </div>
+                      <div className="w-full bg-school-grey-100 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(count / total) * 100}%` }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className={`h-full ${categoryColors[category] || 'bg-gray-500'}`}
+                        />
+                      </div>
+                    </div>
+                  ))
+                })()}
+              </div>
+            </motion.div>
+
+            {/* Monthly Trend Chart */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 p-6 transition-colors"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-green-500/10 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="w-5 h-5 text-green-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-school-grey-800 dark:text-white">Monthly Trends</h3>
+                    <p className="text-sm text-school-grey-500 dark:text-gray-400">Last 6 months</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                {/* Simple bar chart */}
+                <div className="flex items-end justify-between h-40 gap-2">
+                  {(() => {
+                    // Use actual monthly data from database
+                    const monthlyData = feedbackTrends.monthlyCounts || []
+                    
+                    if (monthlyData.length === 0) {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center text-school-grey-500 dark:text-gray-400">
+                          <p className="text-sm">Loading data...</p>
+                        </div>
+                      )
+                    }
+                    
+                    // Find the highest value to use as 100% reference
+                    const maxValue = Math.max(...monthlyData.map(d => d.count))
+                    
+                    // If all values are 0, show empty state
+                    if (maxValue === 0) {
+                      return (
+                        <div className="w-full h-full flex items-center justify-center text-school-grey-500 dark:text-gray-400">
+                          <p className="text-sm">No feedback data for this period</p>
+                        </div>
+                      )
+                    }
+                    
+                    return monthlyData.map((data, index) => {
+                      // Calculate height as percentage of max value (highest bar = 100%)
+                      const heightPercentage = (data.count / maxValue) * 100
+                      
+                      return (
+                        <div key={data.month + index} className="flex-1 flex flex-col items-center gap-2">
+                          <motion.div
+                            initial={{ height: 0 }}
+                            animate={{ height: `${heightPercentage}%` }}
+                            transition={{ duration: 1, delay: index * 0.1, ease: "easeOut" }}
+                            style={{ minHeight: data.count > 0 ? '4px' : '0px' }}
+                            className={`w-full rounded-t-lg ${
+                              index === monthlyData.length - 1 
+                                ? 'bg-gradient-to-t from-university-red to-university-red-600' 
+                                : 'bg-gradient-to-t from-blue-500 to-blue-600'
+                            } relative group ${data.count === 0 ? 'invisible' : ''}`}
+                          >
+                            <div className="absolute -top-8 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-school-grey-800 dark:bg-gray-700 text-white text-xs py-1 px-2 rounded whitespace-nowrap z-10">
+                              {data.count} feedback{data.count !== 1 ? 's' : ''}
+                            </div>
+                          </motion.div>
+                          <span className="text-xs font-medium text-school-grey-600 dark:text-gray-400">{data.month}</span>
+                        </div>
+                      )
+                    })
+                  })()}
+                </div>
+                
+                {/* Comparison stats */}
+                <div className="flex items-center justify-between pt-4 border-t border-school-grey-100 dark:border-gray-700">
+                  <div>
+                    <p className="text-sm text-school-grey-500 dark:text-gray-400">This Month</p>
+                    <p className="text-2xl font-bold text-school-grey-800 dark:text-white">{feedbackTrends.thisMonth}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-school-grey-500 dark:text-gray-400">Last Month</p>
+                    <p className="text-2xl font-bold text-school-grey-600 dark:text-gray-400">{feedbackTrends.lastMonth}</p>
+                  </div>
+                  <div className={`flex items-center space-x-1 text-sm font-medium ${
+                    feedbackTrends.thisMonth >= feedbackTrends.lastMonth 
+                      ? 'text-green-600 dark:text-green-400' 
+                      : 'text-red-600 dark:text-red-400'
+                  }`}>
+                    {feedbackTrends.thisMonth >= feedbackTrends.lastMonth ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+                    <span>{feedbackTrends.lastMonth > 0 ? Math.abs(Math.round(((feedbackTrends.thisMonth - feedbackTrends.lastMonth) / feedbackTrends.lastMonth) * 100)) : 0}%</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
           {/* Main Content Grid */}
           <div className="grid lg:grid-cols-3 gap-8">
-        {/* Recent Feedback */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 transition-colors"
-        >
-          <div className="p-6 border-b border-school-grey-100 dark:border-gray-700 flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                <MessageSquare className="w-5 h-5 text-blue-500" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-school-grey-800 dark:text-white">Recent TINIG DINIG Feedback</h2>
-                <p className="text-sm text-school-grey-500 dark:text-gray-400">Latest submissions from students</p>
-              </div>
-            </div>
-            <Link 
-              to="/admin/feedback" 
-              className="text-university-red font-medium text-sm hover:underline flex items-center space-x-1 group"
+            {/* Recent Feedback */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 transition-colors"
             >
-              <span>View All</span>
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-            </Link>
-          </div>
-          
-          <div className="divide-y divide-school-grey-100 dark:divide-gray-700">
-            <AnimatePresence mode="popLayout">
-              {recentFeedback.length === 0 ? (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="p-8 text-center"
-                >
-                  <div className="w-16 h-16 bg-school-grey-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <MessageSquare className="w-8 h-8 text-school-grey-400 dark:text-gray-500" />
+              <div className="p-6 border-b border-school-grey-100 dark:border-gray-700 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                    <MessageSquare className="w-5 h-5 text-blue-500" />
                   </div>
-                  <p className="text-school-grey-500 dark:text-gray-400">No feedback yet</p>
-                </motion.div>
-              ) : (
-                recentFeedback.map((feedback, index) => {
-                  const StatusIcon = getStatusIcon(feedback.status)
-                  return (
-                    <Link key={feedback.id} to="/admin/feedback">
-                      <motion.div
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="p-4 hover:bg-school-grey-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-3 mb-2">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}>
-                                <StatusIcon className="w-3 h-3 inline mr-1" />
-                                {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1).replace('_', ' ')}
-                              </span>
-                              <span className="text-xs text-school-grey-500 dark:text-gray-400 bg-school-grey-100 dark:bg-gray-700 px-2 py-1 rounded-full">
-                                {feedback.category}
+                  <div>
+                    <h2 className="text-lg font-bold text-school-grey-800 dark:text-white">Recent TINIG DINIG Feedback</h2>
+                    <p className="text-sm text-school-grey-500 dark:text-gray-400">Latest submissions from students</p>
+                  </div>
+                </div>
+                <Link 
+                  to="/admin/feedback" 
+                  className="text-university-red font-medium text-sm hover:underline flex items-center space-x-1 group"
+                >
+                  <span>View All</span>
+                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+              
+              <div className="divide-y divide-school-grey-100 dark:divide-gray-700">
+                <AnimatePresence mode="popLayout">
+                  {recentFeedback.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="p-8 text-center"
+                    >
+                      <div className="w-16 h-16 bg-school-grey-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <MessageSquare className="w-8 h-8 text-school-grey-400 dark:text-gray-500" />
+                      </div>
+                      <p className="text-school-grey-500 dark:text-gray-400">No feedback yet</p>
+                    </motion.div>
+                  ) : (
+                    recentFeedback.map((feedback, index) => {
+                      const StatusIcon = getStatusIcon(feedback.status)
+                      return (
+                        <Link key={feedback.id} to="/admin/feedback">
+                          <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="p-4 hover:bg-school-grey-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                          >
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-2">
+                                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(feedback.status)}`}>
+                                    <StatusIcon className="w-3 h-3 inline mr-1" />
+                                    {feedback.status.charAt(0).toUpperCase() + feedback.status.slice(1).replace('_', ' ')}
+                                  </span>
+                                  <span className="text-xs text-school-grey-500 dark:text-gray-400 bg-school-grey-100 dark:bg-gray-700 px-2 py-1 rounded-full">
+                                    {feedback.category}
+                                  </span>
+                                </div>
+                                <h3 className="font-medium text-school-grey-800 dark:text-white mb-1">{feedback.subject}</h3>
+                                <p className="text-sm text-school-grey-500 dark:text-gray-400">{feedback.college || 'N/A'}</p>
+                              </div>
+                              <span className="text-xs text-school-grey-400 dark:text-gray-500">
+                                {formatTimeAgo(feedback.created_at)}
                               </span>
                             </div>
-                            <h3 className="font-medium text-school-grey-800 dark:text-white mb-1">{feedback.subject}</h3>
-                            <p className="text-sm text-school-grey-500 dark:text-gray-400">{feedback.college || 'N/A'}</p>
-                          </div>
-                          <span className="text-xs text-school-grey-400 dark:text-gray-500">
-                            {formatTimeAgo(feedback.created_at)}
-                          </span>
-                        </div>
-                      </motion.div>
-                    </Link>
-                  )
-                })
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
+                          </motion.div>
+                        </Link>
+                      )
+                    })
+                  )}
+                </AnimatePresence>
+              </div>
+            </motion.div>
 
-        {/* Right Sidebar */}
-        <div className="space-y-6">
+            {/* Right Sidebar */}
+            <div className="space-y-6">
           {/* Quick Actions */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}

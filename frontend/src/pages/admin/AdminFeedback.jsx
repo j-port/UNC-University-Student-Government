@@ -13,7 +13,9 @@ import {
   RefreshCw,
   TrendingUp,
   TrendingDown,
-  Activity
+  Activity,
+  Paperclip,
+  ExternalLink
 } from 'lucide-react'
 import { useFeedback, useNotification } from '../../hooks'
 import { formatDate } from '../../utils/formatters'
@@ -912,6 +914,32 @@ export default function AdminFeedback() {
             {/* Message */}
             <div className="bg-school-grey-50 dark:bg-gray-700 rounded-xl p-3 md:p-4 max-h-60 overflow-y-auto">
               <p className="text-sm md:text-base text-school-grey-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">{selectedFeedback.message}</p>
+            </div>
+
+            {/* Attachment */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-4">
+              <label className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center space-x-2">
+                <Paperclip className="w-5 h-5" />
+                <span>Attachment</span>
+              </label>
+              {selectedFeedback.attachmentUrl ? (
+                <>
+                  <a
+                    href={selectedFeedback.attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center space-x-2 px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all hover:shadow-lg font-medium"
+                  >
+                    <ExternalLink className="w-5 h-5" />
+                    <span>Open Attachment</span>
+                  </a>
+                  <p className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                    {selectedFeedback.attachmentUrl.includes('drive.google.com') ? '📁 Google Drive Link' : '🔗 External Link'}
+                  </p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">No attachment provided</p>
+              )}
             </div>
 
             {/* Submitter Info */}
