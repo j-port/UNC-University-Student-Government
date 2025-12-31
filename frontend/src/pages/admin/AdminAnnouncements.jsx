@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
   Search, 
@@ -8,54 +8,20 @@ import {
   Eye, 
   EyeOff,
   Calendar,
-  Clock,
-  Tag,
-  Upload,
-  X
+  Tag
 } from 'lucide-react'
-
-// Sample announcements data
-const announcementsData = [
-  {
-    id: 1,
-    title: 'USG General Assembly 2025',
-    content: 'All students are invited to attend the USG General Assembly on January 15, 2025 at the University Gymnasium. This is a mandatory event for all student leaders.',
-    category: 'Event',
-    status: 'published',
-    priority: 'high',
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-    createdAt: '2024-12-30T10:00:00',
-    publishedAt: '2024-12-30T10:00:00',
-  },
-  {
-    id: 2,
-    title: 'New Student ID Claiming Schedule',
-    content: 'Students who have enrolled for the second semester may now claim their new student IDs at the Registrar Office.',
-    category: 'Notice',
-    status: 'published',
-    priority: 'medium',
-    image: null,
-    createdAt: '2024-12-29T14:00:00',
-    publishedAt: '2024-12-29T14:00:00',
-  },
-  {
-    id: 3,
-    title: 'Scholarship Application Now Open',
-    content: 'Academic scholarship applications for the upcoming semester are now open. Deadline is on January 31, 2025.',
-    category: 'Announcement',
-    status: 'draft',
-    priority: 'high',
-    image: null,
-    createdAt: '2024-12-28T09:00:00',
-    publishedAt: null,
-  },
-]
-
-const categories = ['Announcement', 'Notice', 'Event', 'News', 'Alert']
-const priorities = ['low', 'medium', 'high']
+import { useAnnouncements, useNotification } from '../../hooks'
+import { formatDate } from '../../utils/formatters'
+import { FormModal, Notification } from '../../components/admin'
+import LoadingSpinner from '../../components/LoadingSpinner'
+import { ANNOUNCEMENT_CATEGORIES, ANNOUNCEMENT_PRIORITIES } from '../../utils/constants'
 
 export default function AdminAnnouncements() {
-  const [announcements, setAnnouncements] = useState(announcementsData)
+  // Custom hooks
+  const { announcements, loading, error, create, update, remove, toggleStatus: toggleAnnouncementStatus } = useAnnouncements()
+  const { notification, showSuccess, showError, dismiss } = useNotification()
+  
+  // UI State
   const [searchTerm, setSearchTerm] = useState('')
   const [showEditor, setShowEditor] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
@@ -68,26 +34,25 @@ export default function AdminAnnouncements() {
     image: null,
   })
 
-  const filteredAnnouncements = announcements.filter(item =>
-    item.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAnnouncements = (announcements || [])
+    .filter(item => item !== null && item !== undefined)
+    .filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (editingItem) {
-      setAnnouncements(announcements.map(item =>
-        item.id === editingItem.id ? { ...item, ...formData } : item
-      ))
-    } else {
-      const newItem = {
-        id: Date.now(),
-        ...formData,
-        createdAt: new Date().toISOString(),
-        publishedAt: formData.status === 'published' ? new Date().toISOString() : null,
+    try {
+      if (editingItem) {
+        await update(editingItem.id, formData)
+        showSuccess('Announcement updated successfully!')
+      } else {
+        await create(formData)
+        showSuccess('Announcement created successfully!')
       }
-      setAnnouncements([newItem, ...announcements])
+      resetForm()
+    } catch (err) {
+      showError(err.message || 'Failed to save announcement')
     }
-    resetForm()
   }
 
   const resetForm = () => {
@@ -116,34 +81,34 @@ export default function AdminAnnouncements() {
     setShowEditor(true)
   }
 
-  const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this announcement?')) {
-      setAnnouncements(announcements.filter(item => item.id !== id))
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this announcement?')) return
+    
+    try {
+      await remove(id)
+      showSuccess('Announcement deleted successfully!')
+    } catch (err) {
+      showError(err.message || 'Failed to delete announcement')
     }
   }
 
-  const toggleStatus = (id) => {
-    setAnnouncements(announcements.map(item => {
-      if (item.id === id) {
-        const newStatus = item.status === 'published' ? 'draft' : 'published'
-        return { 
-          ...item, 
-          status: newStatus,
-          publishedAt: newStatus === 'published' ? new Date().toISOString() : null
-        }
-      }
-      return item
-    }))
-  }
+  const toggleStatus = async (id) => {
+    const announcement = announcements.find(item => item.id === id)
+    if (!announcement) return
 
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not published'
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric'
-    })
+    const newStatus = announcement.status === 'published' ? 'draft' : 'published'
+    const confirmed = window.confirm(
+      `Are you sure you want to change this announcement to ${newStatus}?`
+    )
+    
+    if (!confirmed) return
+
+    try {
+      await toggleAnnouncementStatus(id)
+      showSuccess(`Status changed to ${newStatus}!`)
+    } catch (err) {
+      showError(err.message || 'Failed to update status')
+    }
   }
 
   const getPriorityColor = (priority) => {
@@ -153,6 +118,14 @@ export default function AdminAnnouncements() {
       case 'low': return 'bg-green-100 text-green-700'
       default: return 'bg-gray-100 text-gray-700'
     }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <LoadingSpinner />
+      </div>
+    )
   }
 
   return (
@@ -229,7 +202,7 @@ export default function AdminAnnouncements() {
               {/* Date */}
               <div className="flex items-center text-xs text-school-grey-500 mb-4">
                 <Calendar className="w-4 h-4 mr-1" />
-                {formatDate(item.publishedAt || item.createdAt)}
+                {formatDate(item.published_at || item.publishedAt || item.created_at || item.createdAt) || 'Not published'}
               </div>
 
               {/* Actions */}
@@ -276,140 +249,131 @@ export default function AdminAnnouncements() {
       )}
 
       {/* Editor Modal */}
-      {showEditor && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-          >
-            <div className="p-6 border-b border-school-grey-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-school-grey-800">
-                {editingItem ? 'Edit Announcement' : 'New Announcement'}
-              </h2>
-              <button
-                onClick={resetForm}
-                className="p-2 text-school-grey-500 hover:text-school-grey-700 hover:bg-school-grey-100 rounded-lg"
+      <FormModal
+        isOpen={showEditor}
+        onClose={resetForm}
+        title={editingItem ? 'Edit Announcement' : 'New Announcement'}
+      >
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Title */}
+          <div>
+            <label className="block text-sm font-medium text-school-grey-700 mb-2">Title</label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Announcement title"
+              className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+              required
+            />
+          </div>
+
+          {/* Content */}
+          <div>
+            <label className="block text-sm font-medium text-school-grey-700 mb-2">Content</label>
+            <textarea
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              placeholder="Write your announcement..."
+              className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all resize-none h-40"
+              required
+            />
+          </div>
+
+          {/* Category & Priority */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-school-grey-700 mb-2">Category</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
               >
-                <X className="w-5 h-5" />
-              </button>
+                {ANNOUNCEMENT_CATEGORIES.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-school-grey-700 mb-2">Priority</label>
+              <select
+                value={formData.priority}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+              >
+                {ANNOUNCEMENT_PRIORITIES.map(pri => (
+                  <option key={pri} value={pri}>{pri.charAt(0).toUpperCase() + pri.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Title */}
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Title</label>
+          {/* Image URL */}
+          <div>
+            <label className="block text-sm font-medium text-school-grey-700 mb-2">Image URL (optional)</label>
+            <input
+              type="url"
+              value={formData.image || ''}
+              onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+              placeholder="https://example.com/image.jpg"
+              className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <label className="block text-sm font-medium text-school-grey-700 mb-2">Status</label>
+            <div className="flex space-x-4">
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  placeholder="Announcement title"
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
-                  required
+                  type="radio"
+                  name="status"
+                  value="draft"
+                  checked={formData.status === 'draft'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="text-university-red focus:ring-university-red"
                 />
-              </div>
-
-              {/* Content */}
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Content</label>
-                <textarea
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                  placeholder="Write your announcement..."
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all resize-none h-40"
-                  required
-                />
-              </div>
-
-              {/* Category & Priority */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-school-grey-700 mb-2">Category</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                    className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
-                  >
-                    {categories.map(cat => (
-                      <option key={cat} value={cat}>{cat}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-school-grey-700 mb-2">Priority</label>
-                  <select
-                    value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                    className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
-                  >
-                    {priorities.map(pri => (
-                      <option key={pri} value={pri}>{pri.charAt(0).toUpperCase() + pri.slice(1)}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Image URL */}
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Image URL (optional)</label>
+                <span className="text-school-grey-700">Save as Draft</span>
+              </label>
+              <label className="flex items-center space-x-2 cursor-pointer">
                 <input
-                  type="url"
-                  value={formData.image || ''}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  placeholder="https://example.com/image.jpg"
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                  type="radio"
+                  name="status"
+                  value="published"
+                  checked={formData.status === 'published'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="text-university-red focus:ring-university-red"
                 />
-              </div>
+                <span className="text-school-grey-700">Publish Now</span>
+              </label>
+            </div>
+          </div>
 
-              {/* Status */}
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Status</label>
-                <div className="flex space-x-4">
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="draft"
-                      checked={formData.status === 'draft'}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="text-university-red focus:ring-university-red"
-                    />
-                    <span className="text-school-grey-700">Save as Draft</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="status"
-                      value="published"
-                      checked={formData.status === 'published'}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                      className="text-university-red focus:ring-university-red"
-                    />
-                    <span className="text-school-grey-700">Publish Now</span>
-                  </label>
-                </div>
-              </div>
+          {/* Actions */}
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors"
+            >
+              {editingItem ? 'Save Changes' : 'Create Announcement'}
+            </button>
+          </div>
+        </form>
+      </FormModal>
 
-              {/* Actions */}
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors"
-                >
-                  {editingItem ? 'Save Changes' : 'Create Announcement'}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+      {/* Notification Toast */}
+      <AnimatePresence>
+        {notification && (
+          <Notification notification={notification} onDismiss={dismiss} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
