@@ -15,9 +15,12 @@ import {
 } from 'lucide-react'
 import USGLogo from '../assets/USG LOGO NO BG.png'
 import CampusBg from '../assets/USG COVER.jpg'
-import { useRef } from 'react'
+import { useRef, useState, useEffect } from 'react'
+import { useSiteContent } from '../hooks/useSiteContent'
+import { useAutomatedStats } from '../hooks/useAutomatedStats'
+import { fetchAnnouncements } from '../api'
 
-const features = [
+const defaultFeatures = [
   {
     icon: Users,
     title: 'Governance Hub',
@@ -41,12 +44,24 @@ const features = [
   },
 ]
 
-const stats = [
+const defaultStats = [
   { number: '10,000+', label: 'Students Served', icon: Users },
   { number: '50+', label: 'Programs & Events', icon: Star },
   { number: '100%', label: 'Transparency', icon: Shield },
   { number: '24/7', label: 'Support Available', icon: Heart },
 ]
+
+// Icon mapping for dynamic content
+const iconMap = {
+  Users,
+  FileText,
+  DollarSign,
+  MessageSquare,
+  Megaphone,
+  Shield,
+  Heart,
+  Star,
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -81,15 +96,59 @@ const floatAnimation = {
 }
 
 export default function Hero() {
+  const { content } = useSiteContent()
+  const automatedStats = useAutomatedStats()
   const ref = useRef(null)
+  const [announcements, setAnnouncements] = useState([])
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
   })
+
+  // Fetch latest 3 announcements for preview
+  useEffect(() => {
+    const loadAnnouncements = async () => {
+      const { data } = await fetchAnnouncements({ status: 'published', limit: 3 })
+      setAnnouncements(data || [])
+    }
+    loadAnnouncements()
+  }, [])
   
-  const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%'])
-  const textY = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+  // Disable parallax on mobile for better UX
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768
+  const backgroundY = useTransform(scrollYProgress, [0, 1], isMobile ? ['0%', '0%'] : ['0%', '50%'])
+  const textY = useTransform(scrollYProgress, [0, 1], isMobile ? ['0%', '0%'] : ['0%', '100%'])
+  const opacity = useTransform(scrollYProgress, [0, 0.5], isMobile ? [1, 1] : [1, 0])
+
+  // Use dynamic stats from database, with automated counts merged in
+  const stats = content.heroStats?.length > 0
+    ? content.heroStats.map(stat => {
+        // Auto-replace "Programs & Events" with actual count from database
+        if (stat.section_key === 'programs-events' && !automatedStats.loading) {
+          return {
+            number: `${automatedStats.eventsCount}+`,
+            label: stat.label,
+            icon: iconMap[stat.icon] || Star,
+          }
+        }
+        return {
+          number: stat.value,
+          label: stat.label,
+          icon: iconMap[stat.icon] || Users,
+        }
+      })
+    : defaultStats
+
+  // Use dynamic features from database or fall back to defaults
+  const features = content.heroFeatures?.length > 0
+    ? content.heroFeatures.map(feature => ({
+        icon: iconMap[feature.icon] || Users,
+        title: feature.title,
+        description: feature.description,
+        path: feature.path,
+        color: feature.color || 'from-blue-500 to-blue-600',
+      }))
+    : defaultFeatures
 
   return (
     <>
@@ -135,7 +194,7 @@ export default function Hero() {
         {/* Main Content */}
         <motion.div 
           style={{ y: textY, opacity }}
-          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-20 min-h-screen flex flex-col justify-center"
+          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 sm:pt-32 pb-16 sm:pb-20 min-h-screen flex flex-col justify-center"
         >
           <motion.div
             variants={containerVariants}
@@ -155,7 +214,7 @@ export default function Hero() {
             {/* Main Heading */}
             <motion.h1
               variants={itemVariants}
-              className="font-display text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight"
+              className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-white mb-4 sm:mb-6 leading-tight"
             >
               Designing Spaces for a
               <br />
@@ -167,7 +226,7 @@ export default function Hero() {
             {/* Subtitle */}
             <motion.p
               variants={itemVariants}
-              className="text-lg sm:text-xl text-white/80 max-w-3xl mx-auto mb-10 leading-relaxed"
+              className="text-base sm:text-lg md:text-xl text-white/80 max-w-3xl mx-auto mb-6 sm:mb-10 leading-relaxed px-2"
             >
               The University Student Government of UNC is committed to amplifying student voices, 
               ensuring transparency, and building a thriving campus community for all Navegantes.
@@ -176,18 +235,18 @@ export default function Hero() {
             {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-8 sm:mb-12 w-full px-2"
             >
-              <Link to="/feedback">
+              <Link to="/feedback" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05, boxShadow: '0 20px 40px rgba(225, 29, 72, 0.4)' }}
                   whileTap={{ scale: 0.95 }}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-university-red to-university-red-600 text-white font-semibold rounded-full overflow-hidden shadow-lg shadow-university-red/30"
+                  className="group relative w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-university-red to-university-red-600 text-white font-semibold rounded-full overflow-hidden shadow-lg shadow-university-red/30"
                 >
-                  <span className="relative z-10 flex items-center space-x-2">
-                    <MessageSquare className="w-5 h-5" />
-                    <span>TINIG DINIG - Share Your Voice</span>
-                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <span className="relative z-10 flex items-center justify-center space-x-2">
+                    <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="text-sm sm:text-base">TINIG DINIG - Share Your Voice</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                   </span>
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-r from-university-red-600 to-university-red-700"
@@ -197,14 +256,14 @@ export default function Hero() {
                   />
                 </motion.button>
               </Link>
-              <Link to="/about">
+              <Link to="/about" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-8 py-4 bg-white/10 backdrop-blur-md text-white font-semibold rounded-full border border-white/30 hover:bg-white/20 transition-colors flex items-center space-x-2"
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white/10 backdrop-blur-md text-white font-semibold rounded-full border border-white/30 hover:bg-white/20 transition-colors flex items-center justify-center space-x-2"
                 >
-                  <Play className="w-5 h-5" />
-                  <span>Learn About USG</span>
+                  <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span className="text-sm sm:text-base">Learn About USG</span>
                 </motion.button>
               </Link>
             </motion.div>
@@ -212,7 +271,7 @@ export default function Hero() {
             {/* Stats */}
             <motion.div
               variants={itemVariants}
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto"
+              className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl mx-auto px-2"
             >
               {stats.map((stat, index) => (
                 <motion.div
@@ -220,11 +279,11 @@ export default function Hero() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.8 + index * 0.1 }}
-                  className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10"
+                  className="bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-white/10"
                 >
-                  <stat.icon className="w-6 h-6 text-university-red-300 mx-auto mb-2" />
-                  <div className="text-2xl sm:text-3xl font-bold text-white">{stat.number}</div>
-                  <div className="text-sm text-white/60">{stat.label}</div>
+                  <stat.icon className="w-5 h-5 sm:w-6 sm:h-6 text-university-red-300 mx-auto mb-1 sm:mb-2" />
+                  <div className="text-xl sm:text-2xl md:text-3xl font-bold text-white">{stat.number}</div>
+                  <div className="text-xs sm:text-sm text-white/60">{stat.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -475,32 +534,44 @@ export default function Hero() {
               </div>
               
               <div className="space-y-4">
-                {[
-                  { title: 'USG General Assembly 2025', date: 'January 15, 2025', type: 'Event' },
-                  { title: 'New Student ID Claiming Schedule', date: 'January 10, 2025', type: 'Notice' },
-                  { title: 'Scholarship Application Now Open', date: 'January 5, 2025', type: 'Announcement' },
-                ].map((item, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1 }}
-                    whileHover={{ x: 5 }}
-                    className="bg-school-grey-50 rounded-2xl p-5 cursor-pointer hover:bg-school-grey-100 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="text-xs font-semibold text-university-red bg-university-red/10 px-2 py-1 rounded-full">
-                          {item.type}
-                        </span>
-                        <h3 className="font-semibold text-school-grey-800 mt-2">{item.title}</h3>
-                        <p className="text-sm text-school-grey-500 mt-1">{item.date}</p>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-school-grey-400" />
-                    </div>
-                  </motion.div>
-                ))}
+                {announcements.length === 0 ? (
+                  <div className="bg-school-grey-50 rounded-2xl p-5 text-center">
+                    <p className="text-school-grey-500">No announcements available at the moment.</p>
+                  </div>
+                ) : (
+                  announcements.map((announcement, index) => (
+                    <Link 
+                      key={announcement.id}
+                      to={`/bulletins/announcement/${announcement.id}`}
+                    >
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ x: 5 }}
+                        className="bg-school-grey-50 rounded-2xl p-5 cursor-pointer hover:bg-school-grey-100 transition-colors"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <span className="text-xs font-semibold text-university-red bg-university-red/10 px-2 py-1 rounded-full capitalize">
+                              {announcement.category || 'Announcement'}
+                            </span>
+                            <h3 className="font-semibold text-school-grey-800 mt-2">{announcement.title}</h3>
+                            <p className="text-sm text-school-grey-500 mt-1">
+                              {new Date(announcement.created_at).toLocaleDateString('en-US', {
+                                month: 'long',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </p>
+                          </div>
+                          <ArrowRight className="w-5 h-5 text-school-grey-400" />
+                        </div>
+                      </motion.div>
+                    </Link>
+                  ))
+                )}
               </div>
             </motion.div>
 

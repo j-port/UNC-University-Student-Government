@@ -164,16 +164,16 @@ export default function AdminLogin() {
           </div>
         </div>
 
-        {/* Demo Credentials */}
+        {/* Security Notice */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
           className="mt-6 bg-school-grey-800 text-white rounded-2xl p-4 text-center"
         >
-          <p className="text-sm font-medium mb-2">Demo Credentials</p>
+          <p className="text-sm font-medium mb-2">🔒 Secure Access</p>
           <p className="text-xs text-school-grey-300">
-            Email: admin@unc.edu.ph | Password: admin123
+            Contact IT support for credentials: usg@unc.edu.ph
           </p>
         </motion.div>
       </motion.div>

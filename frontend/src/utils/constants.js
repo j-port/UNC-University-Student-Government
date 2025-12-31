@@ -61,18 +61,15 @@ export const ISSUANCE_TYPES = [
     "Other",
 ];
 
-// Feedback categories
+// Feedback categories - Must match database check constraint
 export const FEEDBACK_CATEGORIES = [
-    { value: "academic", label: "Academic Concerns" },
-    { value: "facilities", label: "Facilities & Infrastructure" },
-    { value: "student-services", label: "Student Services" },
-    { value: "events", label: "Events & Activities" },
-    { value: "policy", label: "Policy & Governance" },
-    { value: "financial", label: "Financial Matters" },
-    { value: "safety", label: "Safety & Security" },
-    { value: "suggestion", label: "Suggestions & Ideas" },
-    { value: "compliment", label: "Compliments & Recognition" },
-    { value: "other", label: "Other Concerns" },
+    { value: "Academic", label: "Academic Concerns" },
+    { value: "Facilities", label: "Facilities & Infrastructure" },
+    { value: "Financial", label: "Financial Matters" },
+    { value: "Student Welfare", label: "Student Services & Welfare" },
+    { value: "Governance", label: "Policy & Governance" },
+    { value: "Suggestion", label: "Suggestions & Ideas" },
+    { value: "Other", label: "Other Concerns" },
 ];
 
 // Feedback statuses

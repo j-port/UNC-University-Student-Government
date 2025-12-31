@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../api";
+import { feedbackAPI } from "../lib/api";
 
 /**
  * Custom hook for managing feedback data
@@ -11,23 +11,30 @@ export function useFeedback() {
     const [error, setError] = useState(null);
 
     /**
-     * Fetch all feedback from the database
+     * Fetch all feedback from the database via backend API
      */
     const fetchFeedback = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
 
-            const { data, error: fetchError } = await supabase
-                .from("feedback")
-                .select("*")
-                .order("created_at", { ascending: false });
+            const response = await feedbackAPI.getAll();
 
-            if (fetchError) throw fetchError;
+            if (!response.success) {
+                throw new Error(response.error || "Failed to fetch feedback");
+            }
+
+            const data = response.data;
 
             // Transform data to match component structure
             const transformedData = (data || []).map((item) => ({
                 id: item.id,
+                referenceNumber:
+                    item.reference_number ||
+                    `TNG-${new Date(item.created_at)
+                        .toISOString()
+                        .slice(0, 10)
+                        .replace(/-/g, "")}-${item.id}`,
                 fullName: item.name,
                 email: item.email,
                 studentId: item.student_id,
@@ -38,6 +45,7 @@ export function useFeedback() {
                 status: item.status || "pending",
                 isAnonymous: item.is_anonymous || false,
                 createdAt: item.created_at,
+                attachmentUrl: item.attachment_url,
             }));
 
             setFeedback(transformedData);
@@ -65,15 +73,16 @@ export function useFeedback() {
                     )
                 );
 
-                const { error: updateError } = await supabase
-                    .from("feedback")
-                    .update({ status: newStatus })
-                    .eq("id", id);
+                const response = await feedbackAPI.update(id, {
+                    status: newStatus,
+                });
 
-                if (updateError) {
+                if (!response.success) {
                     // Rollback on error
                     setFeedback(previousFeedback);
-                    throw updateError;
+                    throw new Error(
+                        response.error || "Failed to update feedback"
+                    );
                 }
             } catch (err) {
                 console.error("Error updating feedback status:", err);
@@ -94,15 +103,14 @@ export function useFeedback() {
                 const previousFeedback = [...feedback];
                 setFeedback((prev) => prev.filter((item) => item.id !== id));
 
-                const { error: deleteError } = await supabase
-                    .from("feedback")
-                    .delete()
-                    .eq("id", id);
+                const response = await feedbackAPI.delete(id);
 
-                if (deleteError) {
+                if (!response.success) {
                     // Rollback on error
                     setFeedback(previousFeedback);
-                    throw deleteError;
+                    throw new Error(
+                        response.error || "Failed to delete feedback"
+                    );
                 }
             } catch (err) {
                 console.error("Error deleting feedback:", err);
@@ -131,5 +139,6 @@ export function useFeedback() {
         updateStatus,
         remove,
         reload,
+        fetchFeedback,
     };
 }

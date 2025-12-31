@@ -13,18 +13,18 @@ export default function SectionHeader({ title, icon: Icon, isExpanded, onToggle,
     return (
         <button
             onClick={onToggle}
-            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-school-grey-100 hover:border-university-red/30 transition-colors"
+            className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-xl border border-school-grey-100 dark:border-gray-700 hover:border-university-red/30 dark:hover:border-university-red/50 transition-colors"
         >
             <div className="flex items-center space-x-3">
                 <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center`}>
                     <Icon className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-semibold text-school-grey-800">{title}</span>
+                <span className="font-semibold text-school-grey-800 dark:text-white">{title}</span>
             </div>
             {isExpanded ? (
-                <ChevronUp className="w-5 h-5 text-school-grey-400" />
+                <ChevronUp className="w-5 h-5 text-school-grey-400 dark:text-gray-500" />
             ) : (
-                <ChevronDown className="w-5 h-5 text-school-grey-400" />
+                <ChevronDown className="w-5 h-5 text-school-grey-400 dark:text-gray-500" />
             )}
         </button>
     );

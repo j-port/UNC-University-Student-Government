@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
-import { submitFeedback } from '../api'
+import { feedbackAPI } from '../lib/api'
 import { 
   Send, 
   User, 
@@ -13,7 +13,13 @@ import {
   CreditCard,
   Building,
   FileText,
-  Shield
+  Shield,
+  Search,
+  Clock,
+  Eye,
+  MessageSquare,
+  Paperclip,
+  Download
 } from 'lucide-react'
 
 const colleges = [
@@ -29,16 +35,13 @@ const colleges = [
 ]
 
 const categories = [
-  { value: 'academic', label: 'Academic Concerns' },
-  { value: 'facilities', label: 'Facilities & Infrastructure' },
-  { value: 'student-services', label: 'Student Services' },
-  { value: 'events', label: 'Events & Activities' },
-  { value: 'policy', label: 'Policy & Governance' },
-  { value: 'financial', label: 'Financial Matters' },
-  { value: 'safety', label: 'Safety & Security' },
-  { value: 'suggestion', label: 'Suggestions & Ideas' },
-  { value: 'compliment', label: 'Compliments & Recognition' },
-  { value: 'other', label: 'Other Concerns' },
+  { value: 'Academic', label: 'Academic Concerns' },
+  { value: 'Facilities', label: 'Facilities & Infrastructure' },
+  { value: 'Student Welfare', label: 'Student Services & Welfare' },
+  { value: 'Governance', label: 'Policy & Governance' },
+  { value: 'Financial', label: 'Financial Matters' },
+  { value: 'Suggestion', label: 'Suggestions & Ideas' },
+  { value: 'Other', label: 'Other Concerns' },
 ]
 
 const contactInfo = [
@@ -80,9 +83,16 @@ export default function Feedback() {
     category: '',
     subject: '',
     message: '',
+    attachmentLink: '',
   })
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState({ type: '', message: '' })
+  
+  // Tracking state
+  const [trackingNumber, setTrackingNumber] = useState('')
+  const [trackingLoading, setTrackingLoading] = useState(false)
+  const [trackedFeedback, setTrackedFeedback] = useState(null)
+  const [trackingError, setTrackingError] = useState('')
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -92,23 +102,91 @@ export default function Feedback() {
     }))
   }
 
+  const handleTrackFeedback = async (e) => {
+    e.preventDefault()
+    setTrackingLoading(true)
+    setTrackingError('')
+    setTrackedFeedback(null)
+
+    try {
+      const response = await feedbackAPI.track(trackingNumber.trim())
+      
+      if (!response.success || !response.data) {
+        throw new Error('Feedback not found. Please check your reference number.')
+      }
+
+      setTrackedFeedback(response.data)
+    } catch (error) {
+      console.error('Tracking error:', error)
+      setTrackingError(error.message || 'Failed to track feedback. Please check your reference number.')
+    } finally {
+      setTrackingLoading(false)
+    }
+  }
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return { bg: 'bg-orange-100', text: 'text-orange-700', border: 'border-orange-200' }
+      case 'in_progress': return { bg: 'bg-blue-100', text: 'text-blue-700', border: 'border-blue-200' }
+      case 'responded': return { bg: 'bg-purple-100', text: 'text-purple-700', border: 'border-purple-200' }
+      case 'resolved': return { bg: 'bg-green-100', text: 'text-green-700', border: 'border-green-200' }
+      default: return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' }
+    }
+  }
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'pending': return Clock
+      case 'in_progress': return Eye
+      case 'responded': return MessageSquare
+      case 'resolved': return CheckCircle
+      default: return AlertCircle
+    }
+  }
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
     setStatus({ type: '', message: '' })
 
     try {
-      const { error } = await submitFeedback({
-        ...formData,
+      // Insert feedback with Google Drive link via backend API
+      const response = await feedbackAPI.create({
+        name: formData.fullName,
+        email: formData.email,
+        student_id: formData.studentId,
+        college: formData.college,
+        category: formData.category,
+        subject: formData.subject,
+        message: formData.message,
+        attachment_url: formData.attachmentLink || null,
+        status: 'pending',
+        is_anonymous: false,
         created_at: new Date().toISOString(),
       })
 
-      if (error) throw error
+      if (!response.success) {
+        throw new Error(response.error || 'Failed to submit feedback')
+      }
+
+      const feedbackData = response.data[0]
+      const referenceNumber = feedbackData.reference_number
 
       setStatus({
         type: 'success',
-        message: 'Thank you for your feedback! Your reference number is TNG-' + Date.now().toString().slice(-6) + '. We will review it and get back to you within 2-3 business days.',
+        message: `Thank you for your feedback! Your reference number is ${referenceNumber}. We will review it and get back to you within 2-3 business days.`,
       })
+
       setFormData({
         fullName: '',
         email: '',
@@ -117,20 +195,14 @@ export default function Feedback() {
         category: '',
         subject: '',
         message: '',
+        attachmentLink: '',
       })
     } catch (error) {
+      console.error('Error submitting feedback:', error)
+      console.error('Error details:', JSON.stringify(error, null, 2))
       setStatus({
-        type: 'success',
-        message: 'Thank you for your feedback! Your reference number is TNG-' + Date.now().toString().slice(-6) + '. We will review it and get back to you within 2-3 business days.',
-      })
-      setFormData({
-        fullName: '',
-        email: '',
-        studentId: '',
-        college: '',
-        category: '',
-        subject: '',
-        message: '',
+        type: 'error',
+        message: `Failed to submit feedback: ${error.message || 'Unknown error'}. Please try again or contact us directly at usg@unc.edu.ph`,
       })
     } finally {
       setLoading(false)
@@ -144,6 +216,173 @@ export default function Feedback() {
         title="Submit Your Concern or Feedback"
         subtitle="TINIG DINIG is the official communication channel between the USG and the student body. We guarantee a response within 2-3 business days."
       />
+
+      {/* Track Feedback Section */}
+      <section className="bg-university-red-50 py-8 border-b border-university-red-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto"
+          >
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-school-grey-800 mb-2">Track Your Feedback</h2>
+              <p className="text-school-grey-600">Enter your reference number to check the status of your submission</p>
+            </div>
+
+            <form onSubmit={handleTrackFeedback} className="bg-white rounded-2xl shadow-sm p-6 border border-school-grey-200">
+              <div className="flex gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400" />
+                  <input
+                    type="text"
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="Enter reference number (e.g., TNG-20251231-42)"
+                    className="w-full pl-12 pr-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={trackingLoading}
+                  className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+                >
+                  {trackingLoading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>Searching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5" />
+                      <span>Track</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Tracking Error */}
+              {trackingError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 p-3 bg-red-50 text-red-800 border border-red-200 rounded-xl flex items-start space-x-2"
+                >
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm">{trackingError}</p>
+                </motion.div>
+              )}
+
+              {/* Tracked Feedback Display */}
+              <AnimatePresence>
+                {trackedFeedback && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="mt-6 pt-6 border-t border-school-grey-200 space-y-4"
+                  >
+                    {/* Status Badge */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-lg font-bold text-school-grey-800 mb-1">Feedback Status</h3>
+                        <p className="text-sm text-school-grey-500">Submitted on {formatDate(trackedFeedback.created_at)}</p>
+                      </div>
+                      {(() => {
+                        const colors = getStatusColor(trackedFeedback.status)
+                        const StatusIcon = getStatusIcon(trackedFeedback.status)
+                        return (
+                          <span className={`inline-flex items-center space-x-2 px-4 py-2 rounded-full text-sm font-medium border ${colors.bg} ${colors.text} ${colors.border}`}>
+                            <StatusIcon className="w-4 h-4" />
+                            <span>{trackedFeedback.status.charAt(0).toUpperCase() + trackedFeedback.status.slice(1).replace('_', ' ')}</span>
+                          </span>
+                        )
+                      })()}
+                    </div>
+
+                    {/* Subject and Category */}
+                    <div>
+                      <h4 className="font-semibold text-school-grey-800 mb-1">{trackedFeedback.subject}</h4>
+                      <span className="inline-block px-3 py-1 bg-school-grey-100 text-school-grey-700 rounded-full text-sm">
+                        {trackedFeedback.category}
+                      </span>
+                    </div>
+
+                    {/* Message */}
+                    <div className="bg-school-grey-50 rounded-xl p-4">
+                      <p className="text-sm text-school-grey-700 leading-relaxed">{trackedFeedback.message}</p>
+                    </div>
+
+                    {/* Attachment */}
+                    {trackedFeedback.attachment_url && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                        <h5 className="font-semibold text-blue-900 mb-2 flex items-center space-x-2">
+                          <Paperclip className="w-4 h-4" />
+                          <span>Attachment</span>
+                        </h5>
+                        <a
+                          href={trackedFeedback.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-2 px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors border border-blue-300"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="text-sm font-medium">View/Download Attachment</span>
+                        </a>
+                      </div>
+                    )}
+
+                    {/* Status Updates */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                      <h5 className="font-semibold text-blue-900 mb-2 flex items-center space-x-2">
+                        <MessageSquare className="w-4 h-4" />
+                        <span>Status Updates</span>
+                      </h5>
+                      <div className="space-y-2 text-sm text-blue-800">
+                        {trackedFeedback.status === 'pending' && (
+                          <p>⏳ Your feedback is waiting to be reviewed by our team.</p>
+                        )}
+                        {trackedFeedback.status === 'in_progress' && (
+                          <p>👀 Your feedback is currently being reviewed and addressed.</p>
+                        )}
+                        {trackedFeedback.status === 'responded' && (
+                          <p>✉️ We have responded to your feedback. Please check the response below.</p>
+                        )}
+                        {trackedFeedback.status === 'resolved' && (
+                          <p>✅ Your feedback has been resolved. Thank you for your input!</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Response */}
+                    {trackedFeedback.response && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-green-50 border border-green-200 rounded-xl p-4"
+                      >
+                        <div className="flex items-center space-x-2 mb-3">
+                          <div className="w-8 h-8 bg-university-red rounded-full flex items-center justify-center">
+                            <MessageSquare className="w-4 h-4 text-white" />
+                          </div>
+                          <div>
+                            <h5 className="font-semibold text-green-900">Response from USG Admin</h5>
+                            <p className="text-xs text-green-700">Official response to your feedback</p>
+                          </div>
+                        </div>
+                        <div className="bg-white border border-green-300 rounded-lg p-3">
+                          <p className="text-sm text-school-grey-700 leading-relaxed whitespace-pre-wrap">{trackedFeedback.response}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
+          </motion.div>
+        </div>
+      </section>
 
       <section className="bg-school-grey-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -314,6 +553,25 @@ export default function Feedback() {
                       className="input-field resize-none"
                       required
                     />
+                  </div>
+
+                  {/* Row 6: Google Drive Link */}
+                  <div>
+                    <label htmlFor="attachmentLink" className="block text-sm font-medium text-school-grey-700 mb-2">
+                      Google Drive Link (Optional)
+                    </label>
+                    <input
+                      type="url"
+                      id="attachmentLink"
+                      name="attachmentLink"
+                      value={formData.attachmentLink}
+                      onChange={handleChange}
+                      placeholder="https://drive.google.com/file/d/..."
+                      className="input-field"
+                    />
+                    <p className="mt-2 text-xs text-school-grey-500">
+                      💡 Upload your file to Google Drive, set sharing to "Anyone with the link", then paste the link here
+                    </p>
                   </div>
 
                   {/* Privacy Notice */}
