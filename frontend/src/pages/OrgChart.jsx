@@ -10,7 +10,7 @@ import {
     fetchOfficers,
     fetchOrganizations,
     fetchCommittees,
-} from "../lib/supabaseClient";
+} from "../api";
 import { Link } from "react-router-dom";
 import USGLogo from "../assets/USG LOGO NO BG.png";
 import {

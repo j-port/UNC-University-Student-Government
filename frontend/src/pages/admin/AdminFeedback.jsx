@@ -13,7 +13,7 @@ import {
   Download,
   RefreshCw
 } from 'lucide-react'
-import { supabase } from '../../lib/supabaseClient'
+import { supabase } from '../../api'
 
 export default function AdminFeedback() {
   const [feedbackData, setFeedbackData] = useState([])

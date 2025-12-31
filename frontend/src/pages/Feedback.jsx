@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
-import { submitFeedback } from '../lib/supabaseClient'
+import { submitFeedback } from '../api'
 import { 
   Send, 
   User, 

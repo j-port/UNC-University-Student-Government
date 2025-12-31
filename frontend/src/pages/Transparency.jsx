@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { fetchFinancialTransactions } from '../lib/supabaseClient'
+import { fetchFinancialTransactions } from '../api'
 import { 
   Search, 
   Filter, 

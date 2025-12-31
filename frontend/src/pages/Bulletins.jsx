@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
 import AnnouncementCard from '../components/AnnouncementCard'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { fetchAnnouncements, fetchIssuances } from '../lib/supabaseClient'
+import { fetchAnnouncements, fetchIssuances } from '../api'
 import { FileText, Megaphone, ArrowRight, Calendar, Download } from 'lucide-react'
 
 // Sample data (used when Supabase data is not available)

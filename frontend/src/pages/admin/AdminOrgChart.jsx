@@ -41,7 +41,7 @@ import {
   updateCommittee,
   deleteCommittee,
   updateOfficersOrder
-} from '../../lib/supabaseClient'
+} from '../../api'
 import LoadingSpinner from '../../components/LoadingSpinner'
 
 export default function AdminOrgChart() {
