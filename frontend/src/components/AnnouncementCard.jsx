@@ -15,7 +15,22 @@ const cardVariants = {
 }
 
 export default function AnnouncementCard({ announcement, index = 0 }) {
-  const { id, title, description, date, category, image_url } = announcement
+  const { 
+    id, 
+    title, 
+    description, 
+    content, 
+    date, 
+    created_at,
+    category, 
+    image_url,
+    image
+  } = announcement
+
+  // Support both field names from different data sources
+  const announcementText = content || description
+  const announcementDate = date || created_at
+  const announcementImage = image || image_url
 
   const getCategoryColor = (cat) => {
     const colors = {
@@ -51,10 +66,10 @@ export default function AnnouncementCard({ announcement, index = 0 }) {
         className="card h-full overflow-hidden"
       >
         {/* Image */}
-        {image_url && (
+        {announcementImage && (
           <div className="relative h-48 -mx-6 -mt-6 mb-4 overflow-hidden">
             <img
-              src={image_url}
+              src={announcementImage}
               alt={title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
@@ -71,10 +86,10 @@ export default function AnnouncementCard({ announcement, index = 0 }) {
                 {category}
               </span>
             )}
-            {date && (
+            {announcementDate && (
               <div className="flex items-center text-school-grey-500 text-sm">
                 <Calendar className="w-4 h-4 mr-1" />
-                {formatDate(date)}
+                {formatDate(announcementDate)}
               </div>
             )}
           </div>
@@ -86,7 +101,7 @@ export default function AnnouncementCard({ announcement, index = 0 }) {
 
           {/* Description */}
           <p className="text-school-grey-600 text-sm flex-grow line-clamp-3">
-            {description}
+            {announcementText}
           </p>
 
           {/* Read More Link */}

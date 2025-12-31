@@ -1,7 +1,24 @@
 -- =====================================================
 -- UNC USG Website - Sample Data Seeds
 -- Populates tables with initial data
+-- WARNING: This will DELETE existing data in these tables!
+-- Only use for development/testing
 -- =====================================================
+
+-- =====================================================
+-- CLEAR EXISTING SEED DATA
+-- =====================================================
+
+DELETE FROM financial_transactions;
+DELETE FROM feedback;
+DELETE FROM issuances;
+DELETE FROM announcements;
+DELETE FROM page_content;
+DELETE FROM site_content;
+DELETE FROM governance_documents;
+DELETE FROM organizations;
+DELETE FROM committees;
+DELETE FROM officers;
 
 -- =====================================================
 -- 1. OFFICERS (Executive & Legislative Branch)
@@ -166,3 +183,74 @@ INSERT INTO page_content (page_slug, title, subtitle, content) VALUES
  '{"text": "To empower and represent the student body through transparent governance, innovative programs, and unwavering commitment to student welfare and academic excellence."}'::jsonb),
 ('vision', 'Our Vision', '', 
  '{"text": "A united student community where every voice matters, every concern is addressed, and every student thrives in an environment of excellence, integrity, and inclusive leadership."}'::jsonb);
+
+-- =====================================================
+-- 7. ANNOUNCEMENTS & BULLETINS
+-- =====================================================
+
+INSERT INTO announcements (title, content, category, priority, status, published_at) VALUES
+('USG General Assembly 2025', 
+ 'Join us for the annual General Assembly on February 15, 2025, at 2:00 PM in the University Auditorium. This is your opportunity to voice your concerns, participate in discussions about student welfare, and learn about our plans for the upcoming semester. All students are encouraged to attend.',
+ 'Event', 'high', 'published', NOW()),
+
+('New Scholarship Program Launched',
+ 'We are excited to announce a new scholarship program in partnership with the university administration. This merit-based scholarship will provide financial assistance to 50 deserving students. Applications open March 1, 2025. Visit the USG office for requirements.',
+ 'Announcement', 'high', 'published', NOW() - INTERVAL '2 days'),
+
+('Campus Cleanup Drive Success',
+ 'Thank you to all 200+ volunteers who participated in our campus cleanup initiative! Together, we collected over 500 kg of recyclable materials and made our campus more beautiful. Special recognition to all participating organizations.',
+ 'Accomplishment', 'medium', 'published', NOW() - INTERVAL '5 days'),
+
+('Mental Health Awareness Week',
+ 'Join us March 10-15 for Mental Health Awareness Week featuring free counseling sessions, stress management workshops, mindfulness exercises, and wellness activities. Take care of your mental health - you are not alone!',
+ 'Event', 'high', 'published', NOW() - INTERVAL '1 day'),
+
+('Student Council Elections 2025',
+ 'Filing of candidacy for student council elections begins April 1, 2025. Visit the USG office for requirements and guidelines. Be the change you want to see - run for office and serve your fellow students!',
+ 'Alert', 'high', 'published', NOW() - INTERVAL '3 days');
+
+-- =====================================================
+-- 8. ISSUANCES & OFFICIAL DOCUMENTS
+-- =====================================================
+
+INSERT INTO issuances (title, description, type, file_url, file_name, status, published_at) VALUES
+('Resolution No. 2025-001: Student Welfare Fund',
+ 'Resolution approving the allocation of ₱500,000 for student welfare programs including scholarships, medical assistance, and emergency financial aid.',
+ 'Resolution', 'https://example.com/documents/resolution-2025-001.pdf', 'resolution-2025-001.pdf', 'published', '2025-01-15'),
+
+('Financial Report Q4 2024',
+ 'Comprehensive financial report covering all income and expenditures for the fourth quarter of 2024. Total budget: ₱2,450,000. Transparency is our commitment.',
+ 'Financial Report', 'https://example.com/documents/financial-report-q4-2024.pdf', 'financial-report-q4-2024.pdf', 'published', '2025-01-10'),
+
+('Memorandum No. 2025-003: Library Hours Extension',
+ 'Official memorandum announcing extended library hours from 8:00 AM to 10:00 PM, Monday to Saturday, effective February 1, 2025.',
+ 'Memorandum', 'https://example.com/documents/memorandum-2025-003.pdf', 'memorandum-2025-003.pdf', 'published', '2025-01-20');
+
+-- =====================================================
+-- 9. FEEDBACK SUBMISSIONS (TINIG DINIG)
+-- =====================================================
+
+INSERT INTO feedback (name, email, student_id, college, subject, message, category, status, is_anonymous) VALUES
+('Maria Santos', 'maria.santos@unc.edu.ph', '2021-12345', 'College of Arts and Sciences',
+ 'Library Facilities Improvement', 'The library needs more power outlets for laptops and better WiFi coverage in the upper floors.',
+ 'Facilities', 'pending', false),
+
+('Anonymous Student', null, null, 'College of Computer Studies',
+ 'Mental Health Support', 'Can we have more accessible counseling services? Sometimes the waiting time is too long.',
+ 'Student Welfare', 'in-progress', true),
+
+('Pedro Reyes', 'pedro.reyes@unc.edu.ph', '2020-67890', 'College of Business and Accountancy',
+ 'Cafeteria Food Prices', 'Food prices in the cafeteria have increased significantly. Can the USG negotiate with vendors for student discounts?',
+ 'Suggestion', 'resolved', false);
+
+-- =====================================================
+-- 10. FINANCIAL TRANSACTIONS
+-- =====================================================
+
+INSERT INTO financial_transactions (date, reference_no, description, category, amount, status) VALUES
+('2025-01-15', 'REF-2025-001', 'Scholarship Fund Allocation', 'Scholarship', -250000.00, 'Completed'),
+('2025-01-10', 'REF-2025-002', 'Student Activity Fee Collection', 'Revenue', 500000.00, 'Completed'),
+('2025-01-05', 'REF-2025-003', 'Mental Health Week Budget', 'Events', -75000.00, 'Completed'),
+('2025-01-03', 'REF-2025-004', 'Office Supplies Purchase', 'Administrative', -15000.00, 'Completed'),
+('2024-12-20', 'REF-2024-099', 'Campus Cleanup Initiative', 'Projects', -30000.00, 'Completed'),
+('2024-12-15', 'REF-2024-098', 'Student Organization Subsidy', 'Subsidy', -100000.00, 'Completed');

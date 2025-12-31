@@ -18,6 +18,7 @@ import Constitution from './pages/Constitution'
 import Bylaws from './pages/Bylaws'
 import OrgChart from './pages/OrgChart'
 import Bulletins from './pages/Bulletins'
+import AnnouncementDetail from './pages/AnnouncementDetail'
 import Transparency from './pages/Transparency'
 import Feedback from './pages/Feedback'
 
@@ -147,6 +148,14 @@ function PublicRoutes() {
           element={
             <AnimatedPage>
               <Bulletins />
+            </AnimatedPage>
+          }
+        />
+        <Route
+          path="/bulletins/announcement/:id"
+          element={
+            <AnimatedPage>
+              <AnnouncementDetail />
             </AnimatedPage>
           }
         />

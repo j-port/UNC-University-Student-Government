@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import PageHeader from '../components/PageHeader'
 import LoadingSpinner from '../components/LoadingSpinner'
-import { fetchFinancialTransactions } from '../api'
+import { fetchFinancialTransactions, fetchIssuances } from '../api'
 import { 
   Search, 
   Filter, 
@@ -13,90 +13,17 @@ import {
   DollarSign,
   Eye,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react'
-
-// Sample data (used when Supabase data is not available)
-const sampleTransactions = [
-  {
-    id: 1,
-    date: '2024-12-15',
-    description: 'Office Supplies Purchase',
-    category: 'Administrative',
-    amount: -2500,
-    reference_no: 'TXN-2024-001',
-    status: 'Completed',
-  },
-  {
-    id: 2,
-    date: '2024-12-12',
-    description: 'General Assembly Event Expenses',
-    category: 'Events',
-    amount: -15000,
-    reference_no: 'TXN-2024-002',
-    status: 'Completed',
-  },
-  {
-    id: 3,
-    date: '2024-12-10',
-    description: 'Student Fee Collection - December',
-    category: 'Income',
-    amount: 250000,
-    reference_no: 'TXN-2024-003',
-    status: 'Completed',
-  },
-  {
-    id: 4,
-    date: '2024-12-08',
-    description: 'Mental Health Week Materials',
-    category: 'Student Welfare',
-    amount: -8500,
-    reference_no: 'TXN-2024-004',
-    status: 'Completed',
-  },
-  {
-    id: 5,
-    date: '2024-12-05',
-    description: 'Scholarship Fund Allocation',
-    category: 'Scholarships',
-    amount: -50000,
-    reference_no: 'TXN-2024-005',
-    status: 'Pending',
-  },
-  {
-    id: 6,
-    date: '2024-12-01',
-    description: 'Organization Grants Disbursement',
-    category: 'Grants',
-    amount: -35000,
-    reference_no: 'TXN-2024-006',
-    status: 'Completed',
-  },
-  {
-    id: 7,
-    date: '2024-11-28',
-    description: 'Sports Equipment Purchase',
-    category: 'Athletics',
-    amount: -12000,
-    reference_no: 'TXN-2024-007',
-    status: 'Completed',
-  },
-  {
-    id: 8,
-    date: '2024-11-25',
-    description: 'University Partnership Fund',
-    category: 'Income',
-    amount: 75000,
-    reference_no: 'TXN-2024-008',
-    status: 'Completed',
-  },
-]
 
 const categories = ['All', 'Administrative', 'Events', 'Income', 'Student Welfare', 'Scholarships', 'Grants', 'Athletics']
 
 export default function Transparency() {
   const [transactions, setTransactions] = useState([])
+  const [financialReports, setFinancialReports] = useState([])
   const [loading, setLoading] = useState(true)
+  const [reportsLoading, setReportsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [currentPage, setCurrentPage] = useState(1)
@@ -107,14 +34,30 @@ export default function Transparency() {
       setLoading(true)
       const { data, error } = await fetchFinancialTransactions(searchTerm)
       
-      // Use sample data if no data from Supabase
-      setTransactions(data?.length ? data : sampleTransactions)
+      setTransactions(data || [])
       setLoading(false)
     }
 
     const debounce = setTimeout(loadTransactions, 300)
     return () => clearTimeout(debounce)
   }, [searchTerm])
+
+  useEffect(() => {
+    const loadFinancialReports = async () => {
+      setReportsLoading(true)
+      try {
+        const { data } = await fetchIssuances({ status: 'published', limit: null })
+        // Filter only Financial Report type
+        const reports = (data || []).filter(item => item.type === 'Financial Report')
+        setFinancialReports(reports)
+      } catch (error) {
+        console.error('Error loading financial reports:', error)
+      } finally {
+        setReportsLoading(false)
+      }
+    }
+    loadFinancialReports()
+  }, [])
 
   // Filter transactions
   const filteredTransactions = transactions.filter((t) => {
@@ -214,7 +157,68 @@ export default function Transparency() {
               </div>
             </motion.div>
           </div>
-
+          {/* Financial Reports Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mb-8"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-school-grey-800">Financial Reports</h2>
+            </div>
+            
+            {reportsLoading ? (
+              <div className="bg-white rounded-2xl shadow-card p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-university-red mx-auto"></div>
+                <p className="mt-4 text-school-grey-600">Loading reports...</p>
+              </div>
+            ) : financialReports.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-card p-8 text-center">
+                <FileText className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                <p className="text-school-grey-600">No financial reports available yet</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {financialReports.map((report) => (
+                  <motion.a
+                    key={report.id}
+                    href={report.file_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    whileHover={{ y: -4 }}
+                    className="bg-white rounded-xl shadow-card hover:shadow-card-hover transition-all p-4 border border-school-grey-100 group"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-university-red-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-5 h-5 text-university-red" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-school-grey-800 group-hover:text-university-red transition-colors line-clamp-2">
+                          {report.title}
+                        </h3>
+                        {report.description && (
+                          <p className="text-xs text-school-grey-500 mt-1 line-clamp-2">
+                            {report.description}
+                          </p>
+                        )}
+                        <div className="flex items-center space-x-2 mt-2 text-xs text-school-grey-400">
+                          <Calendar className="w-3 h-3" />
+                          <span>
+                            {new Date(report.published_at || report.created_at).toLocaleDateString('en-US', {
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                      </div>
+                      <Download className="w-4 h-4 text-school-grey-400 group-hover:text-university-red transition-colors flex-shrink-0" />
+                    </div>
+                  </motion.a>
+                ))}
+              </div>
+            )}
+          </motion.div>
           {/* Search and Filters */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -284,7 +288,16 @@ export default function Transparency() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-school-grey-100">
-                      {paginatedTransactions.map((transaction, index) => (
+                      {paginatedTransactions.length === 0 ? (
+                        <tr>
+                          <td colSpan="7" className="px-6 py-12 text-center">
+                            <DollarSign className="w-16 h-16 text-school-grey-300 mx-auto mb-4" />
+                            <h3 className="text-xl font-semibold text-school-grey-700 mb-2">No Transactions Yet</h3>
+                            <p className="text-school-grey-500">Financial transactions are currently not available.</p>
+                          </td>
+                        </tr>
+                      ) : (
+                        paginatedTransactions.map((transaction, index) => (
                         <motion.tr
                           key={transaction.id}
                           initial={{ opacity: 0 }}
@@ -339,7 +352,8 @@ export default function Transparency() {
                             </motion.button>
                           </td>
                         </motion.tr>
-                      ))}
+                      ))
+                      )}
                     </tbody>
                   </table>
                 </div>

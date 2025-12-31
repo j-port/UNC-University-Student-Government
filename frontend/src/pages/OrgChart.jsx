@@ -228,12 +228,18 @@ export default function OrgChart() {
                             icon={Building}
                             color="from-university-red to-university-red-700"
                             defaultOpen={true}>
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {executiveOfficers.map((officer) => (
+                            {executiveOfficers.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <User className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No executive officers available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {executiveOfficers.map((officer) => (
                                     <motion.div
                                         key={officer.id}
                                         variants={itemVariants}
@@ -263,7 +269,8 @@ export default function OrgChart() {
                                         )}
                                     </motion.div>
                                 ))}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* Legislative Branch */}
@@ -272,12 +279,18 @@ export default function OrgChart() {
                             icon={Scale}
                             color="from-blue-500 to-blue-600"
                             defaultOpen={true}>
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {legislativeOfficers.map((officer) => (
+                            {legislativeOfficers.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <Scale className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No legislative officers available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    {legislativeOfficers.map((officer) => (
                                     <motion.div
                                         key={officer.id}
                                         variants={itemVariants}
@@ -307,7 +320,8 @@ export default function OrgChart() {
                                         )}
                                     </motion.div>
                                 ))}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* Council Departments */}
@@ -315,12 +329,18 @@ export default function OrgChart() {
                             title="Council Departments"
                             icon={Briefcase}
                             color="from-purple-500 to-purple-600">
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {committees.map((committee) => {
+                            {committees.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <Briefcase className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No committees available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {committees.map((committee) => {
                                     const IconComponent =
                                         iconMap[committee.icon] || Briefcase;
                                     return (
@@ -349,7 +369,8 @@ export default function OrgChart() {
                                         </motion.div>
                                     );
                                 })}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* College Student Councils */}
@@ -357,12 +378,18 @@ export default function OrgChart() {
                             title="College Student Councils"
                             icon={GraduationCap}
                             color="from-green-500 to-green-600">
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {collegeCouncils.map((council) => (
+                            {collegeCouncils.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <GraduationCap className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No college councils available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {collegeCouncils.map((council) => (
                                     <motion.div
                                         key={council.id}
                                         variants={itemVariants}
@@ -375,7 +402,8 @@ export default function OrgChart() {
                                         </p>
                                     </motion.div>
                                 ))}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* Academic Organizations */}
@@ -383,10 +411,16 @@ export default function OrgChart() {
                             title="Federally Recognized Student Organizations - Academic"
                             icon={BookOpen}
                             color="from-orange-500 to-orange-600">
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
+                            {academicOrgs.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <BookOpen className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No academic organizations available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {academicOrgs.map((org) => (
                                     <motion.div
@@ -410,7 +444,8 @@ export default function OrgChart() {
                                         </div>
                                     </motion.div>
                                 ))}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* Non-Academic Organizations */}
@@ -418,12 +453,18 @@ export default function OrgChart() {
                             title="FSOs - Non-Academic Organizations"
                             icon={Users}
                             color="from-teal-500 to-teal-600">
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {nonAcademicOrgs.map((org) => {
+                            {nonAcademicOrgs.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <Users className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No non-academic organizations available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
+                                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {nonAcademicOrgs.map((org) => {
                                     const IconComponent =
                                         iconMap[org.icon] || Users;
                                     return (
@@ -447,7 +488,8 @@ export default function OrgChart() {
                                         </motion.div>
                                     );
                                 })}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
 
                         {/* Fraternities & Sororities */}
@@ -455,10 +497,16 @@ export default function OrgChart() {
                             title="Fraternities & Sororities"
                             icon={Users}
                             color="from-pink-500 to-pink-600">
-                            <motion.div
-                                variants={containerVariants}
-                                initial="hidden"
-                                animate="visible"
+                            {fraternities.length === 0 ? (
+                                <div className="bg-school-grey-50 rounded-xl p-8 text-center">
+                                    <Users className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
+                                    <p className="text-school-grey-600">No fraternities or sororities available yet</p>
+                                </div>
+                            ) : (
+                                <motion.div
+                                    variants={containerVariants}
+                                    initial="hidden"
+                                    animate="visible"
                                 className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                 {fraternities.map((org) => (
                                     <motion.div
@@ -488,7 +536,8 @@ export default function OrgChart() {
                                         </div>
                                     </motion.div>
                                 ))}
-                            </motion.div>
+                                </motion.div>
+                            )}
                         </ExpandableSection>
                     </div>
                 </div>

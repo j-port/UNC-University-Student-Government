@@ -34,8 +34,9 @@ export default function AdminAnnouncements() {
     image: null,
   })
 
-  const filteredAnnouncements = (announcements || []).filter(item =>
-    item.title?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredAnnouncements = (announcements || [])
+    .filter(item => item !== null && item !== undefined)
+    .filter(item => item.title?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
   const handleSubmit = async (e) => {
@@ -92,9 +93,19 @@ export default function AdminAnnouncements() {
   }
 
   const toggleStatus = async (id) => {
+    const announcement = announcements.find(item => item.id === id)
+    if (!announcement) return
+
+    const newStatus = announcement.status === 'published' ? 'draft' : 'published'
+    const confirmed = window.confirm(
+      `Are you sure you want to change this announcement to ${newStatus}?`
+    )
+    
+    if (!confirmed) return
+
     try {
       await toggleAnnouncementStatus(id)
-      showSuccess('Status updated successfully!')
+      showSuccess(`Status changed to ${newStatus}!`)
     } catch (err) {
       showError(err.message || 'Failed to update status')
     }

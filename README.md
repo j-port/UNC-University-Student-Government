@@ -48,9 +48,11 @@ UNC-USG_WEBSITE/
 │   ├── package.json
 │   └── .env
 │
-├── supabase_schema_setup.sql  # Complete database schema
-├── supabase_feedback_setup.sql  # Feedback system schema
-└── README.md
+├── database_schema.sql                # ⭐ Complete unified database schema
+├── supabase_seed_data.sql            # Sample/test data (delete after adding real content)
+├── DATABASE_SETUP_GUIDE.md            # 📚 Database setup documentation
+├── CHANGELOG.md                       # Version history
+└── README.md                          # This file
 ```
 
 ## 🚀 Getting Started
@@ -159,10 +161,11 @@ The backend API will be available at `http://localhost:5000`
 ### Supabase Setup
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Run the main schema setup script (`supabase_schema_setup.sql`) in your Supabase SQL editor to create all tables
-3. Optionally run the feedback setup script (`supabase_feedback_setup.sql`) if not included in main schema
-4. Configure Row Level Security (RLS) policies (included in schema file)
-5. Copy your project URL and anon key to the respective `.env` files
+2. Run the **unified schema** script (`database_schema.sql`) in your Supabase SQL editor to create all tables, indexes, policies, and storage
+3. (Optional) Run `supabase_seed_data.sql` for test/mock data during development
+4. Copy your project URL and anon key to the respective `.env` files
+
+📚 **See [DATABASE_SETUP_GUIDE.md](DATABASE_SETUP_GUIDE.md) for detailed setup instructions**
 
 **Database Tables Created:**
 
@@ -170,8 +173,11 @@ The backend API will be available at `http://localhost:5000`
 -   `organizations` - Student organizations (FSOs, fraternities, etc.)
 -   `committees` - USG committees
 -   `announcements` - Bulletins, events, and announcements
+-   `issuances` - Official documents (resolutions, reports, memoranda)
 -   `governance_documents` - Constitution and bylaws
--   `site_content` - Dynamic page content
+-   `feedback` - TINIG DINIG feedback system
+-   `financial_transactions` - Transparency reporting
+-   `site_content` - Dynamic page content (stats, values, etc.)
 -   `page_content` - Full page management
 
 ### Running the Full Application

@@ -4,3 +4,4 @@ export { useCommittees } from "./useCommittees";
 export { useNotification } from "./useNotification";
 export { useFeedback } from "./useFeedback";
 export { useAnnouncements } from "./useAnnouncements";
+export { useIssuances } from "./useIssuances";

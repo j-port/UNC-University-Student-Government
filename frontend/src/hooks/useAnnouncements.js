@@ -1,5 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { fetchAnnouncements } from "../api/announcements";
+import {
+    fetchAnnouncements,
+    createAnnouncement,
+    updateAnnouncement,
+    deleteAnnouncement,
+} from "../api/announcements";
 
 /**
  * Custom hook for managing announcements
@@ -12,13 +17,18 @@ export function useAnnouncements() {
 
     /**
      * Fetch all announcements from the API
+     * @param {boolean} silent - If true, don't show loading state (for background refreshes)
      */
-    const fetchAll = useCallback(async () => {
+    const fetchAll = useCallback(async (silent = false) => {
         try {
-            setLoading(true);
-            setError(null);
+            if (!silent) {
+                setLoading(true);
+                setError(null);
+            }
 
-            const { data, error: fetchError } = await fetchAnnouncements();
+            const { data, error: fetchError } = await fetchAnnouncements({
+                limit: null,
+            }); // Fetch all for admin
 
             if (fetchError) {
                 throw new Error(
@@ -26,46 +36,54 @@ export function useAnnouncements() {
                 );
             }
 
+            console.log("Fetched announcements:", data?.length, "items");
             setAnnouncements(data || []);
         } catch (err) {
             // Suppress console error for expected "table not found" during development
             if (!err.message?.includes("Could not find the table")) {
                 console.error("Error fetching announcements:", err);
             }
-            setError(err.message);
+            if (!silent) {
+                setError(err.message);
+            }
             setAnnouncements([]); // Ensure empty array on error
         } finally {
-            setLoading(false);
+            if (!silent) {
+                setLoading(false);
+            }
         }
     }, []);
 
     /**
-     * Create a new announcement (local only for now - needs API implementation)
+     * Create a new announcement
      * @param {Object} announcementData - Announcement data
      */
-    const create = useCallback(async (announcementData) => {
-        try {
-            const newItem = {
-                id: Date.now(),
-                ...announcementData,
-                created_at: new Date().toISOString(),
-                published_at:
-                    announcementData.status === "published"
-                        ? new Date().toISOString()
-                        : null,
-            };
+    const create = useCallback(
+        async (announcementData) => {
+            try {
+                const { error: createError } = await createAnnouncement(
+                    announcementData
+                );
 
-            setAnnouncements((prev) => [newItem, ...prev]);
-            return newItem;
-        } catch (err) {
-            console.error("Error creating announcement:", err);
-            throw err;
-        }
-    }, []);
+                if (createError) {
+                    throw new Error(
+                        createError.message || "Failed to create announcement"
+                    );
+                }
+
+                // Silently refetch all data to get the new item
+                await fetchAll(true);
+            } catch (err) {
+                console.error("Error creating announcement:", err);
+                throw err;
+            }
+        },
+        [fetchAll]
+    );
 
     /**
      * Update an existing announcement
-     * @param {number} id - Announcement ID
+     * @param {string} id - Announcement ID
      * @param {Object} updates - Updated data
      */
     const update = useCallback(
@@ -74,26 +92,43 @@ export function useAnnouncements() {
                 // Optimistic update
                 const previousAnnouncements = [...announcements];
                 setAnnouncements((prev) =>
-                    prev.map((item) =>
-                        item.id === id ? { ...item, ...updates } : item
-                    )
+                    prev
+                        .filter((item) => item !== null)
+                        .map((item) =>
+                            item.id === id ? { ...item, ...updates } : item
+                        )
                 );
 
-                // TODO: API call would go here
-                // await updateAnnouncement(id, updates)
+                console.log("Updating announcement:", { id, updates });
+                const { error: updateError } = await updateAnnouncement(
+                    id,
+                    updates
+                );
+
+                if (updateError) {
+                    console.error("Update error:", updateError);
+                    // Rollback on error
+                    setAnnouncements(previousAnnouncements);
+                    throw new Error(
+                        updateError.message || "Failed to update announcement"
+                    );
+                }
+
+                console.log("Update successful, refetching...");
+                // Silently refetch to get accurate data without showing loading state
+                await fetchAll(true);
+                console.log("Refetch complete");
             } catch (err) {
-                // Rollback on error
-                setAnnouncements(previousAnnouncements);
                 console.error("Error updating announcement:", err);
                 throw err;
             }
         },
-        [announcements]
+        [announcements, fetchAll]
     );
 
     /**
      * Delete an announcement
-     * @param {number} id - Announcement ID
+     * @param {string} id - Announcement ID
      */
     const remove = useCallback(
         async (id) => {
@@ -104,11 +139,16 @@ export function useAnnouncements() {
                     prev.filter((item) => item.id !== id)
                 );
 
-                // TODO: API call would go here
-                // await deleteAnnouncement(id)
+                const { error: deleteError } = await deleteAnnouncement(id);
+
+                if (deleteError) {
+                    // Rollback on error
+                    setAnnouncements(previousAnnouncements);
+                    throw new Error(
+                        deleteError.message || "Failed to delete announcement"
+                    );
+                }
             } catch (err) {
-                // Rollback on error
-                setAnnouncements(previousAnnouncements);
                 console.error("Error deleting announcement:", err);
                 throw err;
             }
@@ -118,7 +158,7 @@ export function useAnnouncements() {
 
     /**
      * Toggle announcement status between published and draft
-     * @param {number} id - Announcement ID
+     * @param {string} id - Announcement ID
      */
     const toggleStatus = useCallback(
         async (id) => {
@@ -138,7 +178,14 @@ export function useAnnouncements() {
                             : null,
                 };
 
+                console.log("Toggling status:", {
+                    id,
+                    currentStatus: announcement.status,
+                    newStatus,
+                    updates,
+                });
                 await update(id, updates);
+                console.log("Status toggled successfully");
             } catch (err) {
                 console.error("Error toggling status:", err);
                 throw err;

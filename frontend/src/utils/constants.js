@@ -53,6 +53,14 @@ export const ANNOUNCEMENT_CATEGORIES = [
 // Announcement priorities
 export const ANNOUNCEMENT_PRIORITIES = ["low", "medium", "high"];
 
+export const ISSUANCE_TYPES = [
+    "Resolution",
+    "Report",
+    "Memorandum",
+    "Financial Report",
+    "Other",
+];
+
 // Feedback categories
 export const FEEDBACK_CATEGORIES = [
     { value: "academic", label: "Academic Concerns" },

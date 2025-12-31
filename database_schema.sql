@@ -1,7 +1,7 @@
 -- =====================================================
--- UNC USG Website - Database Schema
--- Complete schema for dynamic content management
--- Version: 1.0
+-- UNC USG Website - Complete Database Schema
+-- Unified schema for all tables, indexes, RLS, and triggers
+-- Version: 2.0
 -- Date: December 31, 2025
 -- =====================================================
 
@@ -12,12 +12,16 @@
 -- 2. Organizations (FSOs, Fraternities, etc.)
 -- 3. Committees
 -- 4. Announcements (Bulletins & Events)
--- 5. Governance Documents (Constitution & Bylaws)
--- 6. Site Content (Dynamic page content)
--- 7. Page Content (Full page management)
--- 8. Indexes
--- 9. Row Level Security (RLS) Policies
--- 10. Triggers
+-- 5. Issuances & Reports
+-- 6. Governance Documents (Constitution & Bylaws)
+-- 7. Feedback (TINIG DINIG)
+-- 8. Financial Transactions
+-- 9. Site Content (Dynamic page content)
+-- 10. Page Content (Full page management)
+-- 11. Storage Buckets & Policies
+-- 12. Indexes
+-- 13. Row Level Security (RLS) Policies
+-- 14. Triggers
 -- =====================================================
 
 -- =====================================================
@@ -159,7 +163,42 @@ COMMENT ON COLUMN announcements.priority IS 'Display priority: low, medium, or h
 COMMENT ON COLUMN announcements.status IS 'Publication status: draft, published, or archived';
 
 -- =====================================================
--- 5. GOVERNANCE DOCUMENTS
+-- 5. ISSUANCES & REPORTS
+-- Stores official documents, reports, resolutions, and memorandums
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS issuances (
+  -- Primary key
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Document information
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT NOT NULL CHECK (type IN ('Resolution', 'Report', 'Memorandum', 'Financial Report', 'Other')),
+  
+  -- File information
+  file_url TEXT NOT NULL, -- URL to the uploaded file in Supabase Storage
+  file_name TEXT NOT NULL, -- Original file name
+  file_size INTEGER, -- File size in bytes
+  
+  -- Status
+  status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  
+  -- Publishing
+  published_at TIMESTAMP WITH TIME ZONE,
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+COMMENT ON TABLE issuances IS 'Stores USG official documents, reports, resolutions, and memorandums';
+COMMENT ON COLUMN issuances.type IS 'Document type: Resolution, Report, Memorandum, Financial Report, or Other';
+COMMENT ON COLUMN issuances.file_url IS 'URL to the uploaded file in Supabase Storage';
+COMMENT ON COLUMN issuances.status IS 'Publication status: draft, published, or archived';
+
+-- =====================================================
+-- 6. GOVERNANCE DOCUMENTS
 -- Stores constitution articles and bylaws
 -- =====================================================
 
@@ -189,7 +228,73 @@ COMMENT ON TABLE governance_documents IS 'Stores USG constitution and bylaws wit
 COMMENT ON COLUMN governance_documents.sections IS 'JSONB array for complex document structure (subsections, clauses, etc.)';
 
 -- =====================================================
--- 6. SITE CONTENT
+-- 7. FEEDBACK (TINIG DINIG)
+-- Stores student feedback and concerns
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS feedback (
+  -- Primary key
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Submitter information (optional for anonymous feedback)
+  name TEXT,
+  email TEXT,
+  student_id TEXT,
+  college TEXT,
+  
+  -- Feedback content
+  category TEXT NOT NULL CHECK (category IN ('Academic', 'Facilities', 'Financial', 'Student Welfare', 'Governance', 'Suggestion', 'Other')),
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  
+  -- Status tracking
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'in-progress', 'resolved', 'closed')),
+  response TEXT,
+  is_anonymous BOOLEAN DEFAULT false,
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+COMMENT ON TABLE feedback IS 'Stores student feedback submissions from TINIG DINIG system';
+COMMENT ON COLUMN feedback.is_anonymous IS 'True if feedback was submitted anonymously';
+COMMENT ON COLUMN feedback.status IS 'Feedback resolution status: pending, in-progress, resolved, or closed';
+
+-- =====================================================
+-- 8. FINANCIAL TRANSACTIONS
+-- Stores USG financial transactions for transparency
+-- =====================================================
+
+CREATE TABLE IF NOT EXISTS financial_transactions (
+  -- Primary key
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  
+  -- Transaction information
+  date DATE NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL,
+  amount DECIMAL(12, 2) NOT NULL, -- Positive for income, negative for expenses
+  
+  -- Reference & Status
+  reference_no TEXT UNIQUE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'Completed' CHECK (status IN ('Pending', 'Completed', 'Cancelled')),
+  
+  -- Additional details
+  notes TEXT,
+  attachments JSONB, -- Array of attachment URLs
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+COMMENT ON TABLE financial_transactions IS 'Stores all USG financial transactions for transparency reporting';
+COMMENT ON COLUMN financial_transactions.amount IS 'Positive for income, negative for expenses';
+COMMENT ON COLUMN financial_transactions.reference_no IS 'Unique transaction reference number';
+
+-- =====================================================
+-- 9. SITE CONTENT
 -- Stores dynamic content for various page sections
 -- =====================================================
 
@@ -222,7 +327,7 @@ COMMENT ON COLUMN site_content.section IS 'Section identifier (e.g., hero_stats,
 COMMENT ON COLUMN site_content.metadata IS 'JSONB for flexible data storage (icons, colors, URLs, etc.)';
 
 -- =====================================================
--- 7. PAGE CONTENT
+-- 10. PAGE CONTENT
 -- Stores full page content for custom pages
 -- =====================================================
 
@@ -248,7 +353,45 @@ COMMENT ON COLUMN page_content.page_slug IS 'Unique page identifier used in URL 
 COMMENT ON COLUMN page_content.content IS 'JSONB for flexible content structure (paragraphs, images, lists, etc.)';
 
 -- =====================================================
--- 8. INDEXES
+-- 11. STORAGE BUCKETS & POLICIES
+-- Supabase Storage configuration for file uploads
+-- =====================================================
+
+-- Create storage bucket for documents
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('documents', 'documents', true)
+ON CONFLICT (id) DO NOTHING;
+
+-- Storage policies for documents bucket
+DROP POLICY IF EXISTS "Public read access" ON storage.objects;
+CREATE POLICY "Public read access"
+  ON storage.objects
+  FOR SELECT
+  USING (bucket_id = 'documents');
+
+DROP POLICY IF EXISTS "Authenticated upload access" ON storage.objects;
+CREATE POLICY "Authenticated upload access"
+  ON storage.objects
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (bucket_id = 'documents');
+
+DROP POLICY IF EXISTS "Authenticated update access" ON storage.objects;
+CREATE POLICY "Authenticated update access"
+  ON storage.objects
+  FOR UPDATE
+  TO authenticated
+  USING (bucket_id = 'documents');
+
+DROP POLICY IF EXISTS "Authenticated delete access" ON storage.objects;
+CREATE POLICY "Authenticated delete access"
+  ON storage.objects
+  FOR DELETE
+  TO authenticated
+  USING (bucket_id = 'documents');
+
+-- =====================================================
+-- 12. INDEXES
 -- Improves query performance for common lookups
 -- =====================================================
 
@@ -272,9 +415,27 @@ CREATE INDEX IF NOT EXISTS idx_announcements_priority ON announcements(priority)
 CREATE INDEX IF NOT EXISTS idx_announcements_published_at ON announcements(published_at);
 CREATE INDEX IF NOT EXISTS idx_announcements_created_at ON announcements(created_at);
 
+-- Issuances indexes
+CREATE INDEX IF NOT EXISTS idx_issuances_type ON issuances(type);
+CREATE INDEX IF NOT EXISTS idx_issuances_status ON issuances(status);
+CREATE INDEX IF NOT EXISTS idx_issuances_published_at ON issuances(published_at);
+CREATE INDEX IF NOT EXISTS idx_issuances_created_at ON issuances(created_at);
+
 -- Governance documents indexes
 CREATE INDEX IF NOT EXISTS idx_governance_type ON governance_documents(type);
 CREATE INDEX IF NOT EXISTS idx_governance_active ON governance_documents(is_active);
+
+-- Feedback indexes
+CREATE INDEX IF NOT EXISTS idx_feedback_status ON feedback(status);
+CREATE INDEX IF NOT EXISTS idx_feedback_category ON feedback(category);
+CREATE INDEX IF NOT EXISTS idx_feedback_created_at ON feedback(created_at);
+CREATE INDEX IF NOT EXISTS idx_feedback_is_anonymous ON feedback(is_anonymous);
+
+-- Financial transactions indexes
+CREATE INDEX IF NOT EXISTS idx_transactions_date ON financial_transactions(date);
+CREATE INDEX IF NOT EXISTS idx_transactions_category ON financial_transactions(category);
+CREATE INDEX IF NOT EXISTS idx_transactions_status ON financial_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON financial_transactions(created_at);
 
 -- Site content indexes
 CREATE INDEX IF NOT EXISTS idx_site_content_section ON site_content(section);
@@ -284,7 +445,7 @@ CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(is_active);
 CREATE INDEX IF NOT EXISTS idx_page_content_slug ON page_content(page_slug);
 
 -- =====================================================
--- 9. ROW LEVEL SECURITY (RLS) POLICIES
+-- 13. ROW LEVEL SECURITY (RLS) POLICIES
 -- Controls data access at the row level
 -- =====================================================
 
@@ -293,7 +454,10 @@ ALTER TABLE officers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE committees ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE issuances ENABLE ROW LEVEL SECURITY;
 ALTER TABLE governance_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE feedback ENABLE ROW LEVEL SECURITY;
+ALTER TABLE financial_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 ALTER TABLE page_content ENABLE ROW LEVEL SECURITY;
 
@@ -302,42 +466,94 @@ ALTER TABLE page_content ENABLE ROW LEVEL SECURITY;
 -- Anyone can view published content
 -- -----------------------------------------------------
 
+-- Officers
 DROP POLICY IF EXISTS "Public read access" ON officers;
 CREATE POLICY "Public read access" 
   ON officers 
   FOR SELECT 
   USING (true);
 
+-- Organizations
 DROP POLICY IF EXISTS "Public read access" ON organizations;
 CREATE POLICY "Public read access" 
   ON organizations 
   FOR SELECT 
   USING (true);
 
+-- Committees
 DROP POLICY IF EXISTS "Public read access" ON committees;
 CREATE POLICY "Public read access" 
   ON committees 
   FOR SELECT 
   USING (true);
 
+-- Announcements (public can only see published)
 DROP POLICY IF EXISTS "Public read access" ON announcements;
 CREATE POLICY "Public read access" 
   ON announcements 
   FOR SELECT 
   USING (status = 'published');
 
+-- Announcements (admin can see all)
+DROP POLICY IF EXISTS "Admin read all access" ON announcements;
+CREATE POLICY "Admin read all access" 
+  ON announcements 
+  FOR SELECT 
+  TO authenticated 
+  USING (true);
+
+-- Issuances (public can only see published)
+DROP POLICY IF EXISTS "Public read access" ON issuances;
+CREATE POLICY "Public read access" 
+  ON issuances 
+  FOR SELECT 
+  USING (status = 'published');
+
+-- Issuances (admin can see all)
+DROP POLICY IF EXISTS "Admin read all access" ON issuances;
+CREATE POLICY "Admin read all access" 
+  ON issuances 
+  FOR SELECT 
+  TO authenticated 
+  USING (true);
+
+-- Governance Documents
 DROP POLICY IF EXISTS "Public read access" ON governance_documents;
 CREATE POLICY "Public read access" 
   ON governance_documents 
   FOR SELECT 
   USING (true);
 
+-- Feedback (only authenticated can read)
+DROP POLICY IF EXISTS "Admin read access" ON feedback;
+CREATE POLICY "Admin read access" 
+  ON feedback 
+  FOR SELECT 
+  TO authenticated 
+  USING (true);
+
+-- Feedback (anyone can submit)
+DROP POLICY IF EXISTS "Public insert access" ON feedback;
+CREATE POLICY "Public insert access" 
+  ON feedback 
+  FOR INSERT 
+  WITH CHECK (true);
+
+-- Financial Transactions
+DROP POLICY IF EXISTS "Public read access" ON financial_transactions;
+CREATE POLICY "Public read access" 
+  ON financial_transactions 
+  FOR SELECT 
+  USING (true);
+
+-- Site Content
 DROP POLICY IF EXISTS "Public read access" ON site_content;
 CREATE POLICY "Public read access" 
   ON site_content 
   FOR SELECT 
   USING (true);
 
+-- Page Content
 DROP POLICY IF EXISTS "Public read access" ON page_content;
 CREATE POLICY "Public read access" 
   ON page_content 
@@ -345,190 +561,109 @@ CREATE POLICY "Public read access"
   USING (true);
 
 -- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Officers
+-- ADMIN WRITE ACCESS
 -- Authenticated users can create, update, and delete
 -- -----------------------------------------------------
 
+-- Officers
 DROP POLICY IF EXISTS "Admin insert access" ON officers;
-CREATE POLICY "Admin insert access" 
-  ON officers 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON officers FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON officers;
-CREATE POLICY "Admin update access" 
-  ON officers 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true)
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON officers FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON officers;
-CREATE POLICY "Admin delete access" 
-  ON officers 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON officers FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Organizations
--- -----------------------------------------------------
-
+-- Organizations
 DROP POLICY IF EXISTS "Admin insert access" ON organizations;
-CREATE POLICY "Admin insert access" 
-  ON organizations 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON organizations FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON organizations;
-CREATE POLICY "Admin update access" 
-  ON organizations 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON organizations FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON organizations;
-CREATE POLICY "Admin delete access" 
-  ON organizations 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON organizations FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Committees
--- -----------------------------------------------------
-
+-- Committees
 DROP POLICY IF EXISTS "Admin insert access" ON committees;
-CREATE POLICY "Admin insert access" 
-  ON committees 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON committees FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON committees;
-CREATE POLICY "Admin update access" 
-  ON committees 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON committees FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON committees;
-CREATE POLICY "Admin delete access" 
-  ON committees 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON committees FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Announcements
--- -----------------------------------------------------
-
+-- Announcements
 DROP POLICY IF EXISTS "Admin insert access" ON announcements;
-CREATE POLICY "Admin insert access" 
-  ON announcements 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON announcements FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON announcements;
-CREATE POLICY "Admin update access" 
-  ON announcements 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON announcements FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON announcements;
-CREATE POLICY "Admin delete access" 
-  ON announcements 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON announcements FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Governance Documents
--- -----------------------------------------------------
+-- Issuances
+DROP POLICY IF EXISTS "Admin insert access" ON issuances;
+CREATE POLICY "Admin insert access" ON issuances FOR INSERT TO authenticated WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admin update access" ON issuances;
+CREATE POLICY "Admin update access" ON issuances FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin delete access" ON issuances;
+CREATE POLICY "Admin delete access" ON issuances FOR DELETE TO authenticated USING (true);
+
+-- Governance Documents
 DROP POLICY IF EXISTS "Admin insert access" ON governance_documents;
-CREATE POLICY "Admin insert access" 
-  ON governance_documents 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON governance_documents FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON governance_documents;
-CREATE POLICY "Admin update access" 
-  ON governance_documents 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON governance_documents FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON governance_documents;
-CREATE POLICY "Admin delete access" 
-  ON governance_documents 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON governance_documents FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Site Content
--- -----------------------------------------------------
+-- Feedback
+DROP POLICY IF EXISTS "Admin update access" ON feedback;
+CREATE POLICY "Admin update access" ON feedback FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Admin delete access" ON feedback;
+CREATE POLICY "Admin delete access" ON feedback FOR DELETE TO authenticated USING (true);
+
+-- Financial Transactions
+DROP POLICY IF EXISTS "Admin insert access" ON financial_transactions;
+CREATE POLICY "Admin insert access" ON financial_transactions FOR INSERT TO authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin update access" ON financial_transactions;
+CREATE POLICY "Admin update access" ON financial_transactions FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Admin delete access" ON financial_transactions;
+CREATE POLICY "Admin delete access" ON financial_transactions FOR DELETE TO authenticated USING (true);
+
+-- Site Content
 DROP POLICY IF EXISTS "Admin insert access" ON site_content;
-CREATE POLICY "Admin insert access" 
-  ON site_content 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON site_content FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON site_content;
-CREATE POLICY "Admin update access" 
-  ON site_content 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON site_content FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON site_content;
-CREATE POLICY "Admin delete access" 
-  ON site_content 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON site_content FOR DELETE TO authenticated USING (true);
 
--- -----------------------------------------------------
--- ADMIN WRITE ACCESS - Page Content
--- -----------------------------------------------------
-
+-- Page Content
 DROP POLICY IF EXISTS "Admin insert access" ON page_content;
-CREATE POLICY "Admin insert access" 
-  ON page_content 
-  FOR INSERT 
-  TO authenticated 
-  WITH CHECK (true);
+CREATE POLICY "Admin insert access" ON page_content FOR INSERT TO authenticated WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin update access" ON page_content;
-CREATE POLICY "Admin update access" 
-  ON page_content 
-  FOR UPDATE 
-  TO authenticated 
-  USING (true) 
-  WITH CHECK (true);
+CREATE POLICY "Admin update access" ON page_content FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Admin delete access" ON page_content;
-CREATE POLICY "Admin delete access" 
-  ON page_content 
-  FOR DELETE 
-  TO authenticated 
-  USING (true);
+CREATE POLICY "Admin delete access" ON page_content FOR DELETE TO authenticated USING (true);
 
 -- =====================================================
--- 9. TRIGGERS
+-- 14. TRIGGERS
 -- Automatically updates timestamps on record changes
 -- =====================================================
 
@@ -543,51 +678,39 @@ $$ language 'plpgsql';
 
 COMMENT ON FUNCTION update_updated_at_column() IS 'Automatically sets updated_at to current timestamp on row update';
 
--- Apply trigger to all tables
+-- Apply trigger to all tables with updated_at column
 DROP TRIGGER IF EXISTS update_officers_updated_at ON officers;
-CREATE TRIGGER update_officers_updated_at 
-  BEFORE UPDATE ON officers
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_officers_updated_at BEFORE UPDATE ON officers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_organizations_updated_at ON organizations;
-CREATE TRIGGER update_organizations_updated_at 
-  BEFORE UPDATE ON organizations
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_organizations_updated_at BEFORE UPDATE ON organizations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_committees_updated_at ON committees;
-CREATE TRIGGER update_committees_updated_at 
-  BEFORE UPDATE ON committees
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_committees_updated_at BEFORE UPDATE ON committees FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_announcements_updated_at ON announcements;
-CREATE TRIGGER update_announcements_updated_at 
-  BEFORE UPDATE ON announcements
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_announcements_updated_at BEFORE UPDATE ON announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_issuances_updated_at ON issuances;
+CREATE TRIGGER update_issuances_updated_at BEFORE UPDATE ON issuances FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_governance_documents_updated_at ON governance_documents;
-CREATE TRIGGER update_governance_documents_updated_at 
-  BEFORE UPDATE ON governance_documents
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_governance_documents_updated_at BEFORE UPDATE ON governance_documents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_feedback_updated_at ON feedback;
+CREATE TRIGGER update_feedback_updated_at BEFORE UPDATE ON feedback FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_financial_transactions_updated_at ON financial_transactions;
+CREATE TRIGGER update_financial_transactions_updated_at BEFORE UPDATE ON financial_transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_site_content_updated_at ON site_content;
-CREATE TRIGGER update_site_content_updated_at 
-  BEFORE UPDATE ON site_content
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_site_content_updated_at BEFORE UPDATE ON site_content FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_page_content_updated_at ON page_content;
-CREATE TRIGGER update_page_content_updated_at 
-  BEFORE UPDATE ON page_content
-  FOR EACH ROW 
-  EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_page_content_updated_at BEFORE UPDATE ON page_content FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- =====================================================
 -- SCHEMA SETUP COMPLETE
 -- =====================================================
--- To populate with sample data, run: supabase_seed_data.sql
+-- Next step: Run database_test_data.sql to populate with test data
 -- =====================================================
