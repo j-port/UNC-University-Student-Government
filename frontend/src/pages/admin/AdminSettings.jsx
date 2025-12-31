@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Save, Moon, Sun, Volume2, VolumeX, Bell, BellOff, User, Mail, Shield, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../api'
 
 export default function AdminSettings() {
   const { user } = useAuth()
@@ -71,8 +72,13 @@ export default function AdminSettings() {
     }
 
     try {
-      // TODO: Call Supabase API to change password
-      // For now, just simulate success
+      // Update password using Supabase Auth
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      })
+      
+      if (error) throw error
+      
       setPasswordSuccess(true)
       setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       setTimeout(() => setPasswordSuccess(false), 3000)

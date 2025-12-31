@@ -90,8 +90,7 @@ export default function AdminLayout() {
   // Redirect if not admin
   useEffect(() => {
     if (!user || !isAdmin) {
-      // For demo purposes, allow access
-      // In production, uncomment: navigate('/admin/login')
+      navigate('/admin/login')
     }
   }, [user, isAdmin, navigate])
 

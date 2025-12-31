@@ -30,12 +30,18 @@ export default function AdminFeedback() {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [categoryFilter, setCategoryFilter] = useState('all')
+  const [collegeFilter, setCollegeFilter] = useState('all')
+  const [dateFromFilter, setDateFromFilter] = useState('')
+  const [dateToFilter, setDateToFilter] = useState('')
   const [selectedFeedback, setSelectedFeedback] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [responseText, setResponseText] = useState('')
   const [savingResponse, setSavingResponse] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [lastUpdate, setLastUpdate] = useState(new Date())
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [selectedItems, setSelectedItems] = useState([])
+  const [showBulkActions, setShowBulkActions] = useState(false)
   const [previousStats, setPreviousStats] = useState({
     total: 0,
     pending: 0,
@@ -176,13 +182,157 @@ export default function AdminFeedback() {
     return `${Math.floor(hours / 24)}d ago`
   }
 
-  const filteredFeedback = feedbackData.filter((item) => {
-    const matchesSearch = (item.subject || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (item.message || '').toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter
-    const matchesCategory = categoryFilter === 'all' || item.category === categoryFilter
-    return matchesSearch && matchesStatus && matchesCategory
+  // Enhanced filtering logic
+  const filteredFeedback = feedbackData.filter(item => {
+    // Text search - search across multiple fields
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase()
+      const matchesSearch = 
+        (item.name || '').toLowerCase().includes(search) ||
+        (item.email || '').toLowerCase().includes(search) ||
+        (item.subject || '').toLowerCase().includes(search) ||
+        (item.message || '').toLowerCase().includes(search) ||
+        (item.reference_number || '').toLowerCase().includes(search) ||
+        (item.college || '').toLowerCase().includes(search) ||
+        (item.student_id || '').toLowerCase().includes(search)
+      
+      if (!matchesSearch) return false
+    }
+
+    // Status filter
+    if (statusFilter !== 'all' && item.status !== statusFilter) return false
+
+    // Category filter
+    if (categoryFilter !== 'all' && item.category !== categoryFilter) return false
+
+    // College filter
+    if (collegeFilter !== 'all' && item.college !== collegeFilter) return false
+
+    // Date range filter
+    if (dateFromFilter) {
+      const itemDate = new Date(item.created_at)
+      const fromDate = new Date(dateFromFilter)
+      if (itemDate < fromDate) return false
+    }
+
+    if (dateToFilter) {
+      const itemDate = new Date(item.created_at)
+      const toDate = new Date(dateToFilter)
+      toDate.setHours(23, 59, 59, 999) // End of day
+      if (itemDate > toDate) return false
+    }
+
+    return true
   })
+
+  // Get unique colleges from feedback data
+  const colleges = [...new Set(feedbackData.map(f => f.college).filter(Boolean))].sort()
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm('')
+    setStatusFilter('all')
+    setCategoryFilter('all')
+    setCollegeFilter('all')
+    setDateFromFilter('')
+    setDateToFilter('')
+  }
+
+  const hasActiveFilters = searchTerm || statusFilter !== 'all' || categoryFilter !== 'all' || 
+                          collegeFilter !== 'all' || dateFromFilter || dateToFilter
+
+  // Bulk action handlers
+  const toggleSelectAll = () => {
+    if (selectedItems.length === filteredFeedback.length) {
+      setSelectedItems([])
+    } else {
+      setSelectedItems(filteredFeedback.map(item => item.id))
+    }
+  }
+
+  const toggleSelectItem = (id) => {
+    setSelectedItems(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    )
+  }
+
+  const handleBulkStatusChange = async (newStatus) => {
+    if (selectedItems.length === 0) return
+    
+    try {
+      await Promise.all(selectedItems.map(id => updateStatus(id, newStatus)))
+      showSuccess(`Updated ${selectedItems.length} item(s) to ${newStatus}`)
+      setSelectedItems([])
+      await fetchFeedback()
+    } catch (error) {
+      showError('Failed to update some items')
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (selectedItems.length === 0) return
+    
+    if (!window.confirm(`Are you sure you want to delete ${selectedItems.length} item(s)?`)) return
+
+    try {
+      await Promise.all(selectedItems.map(id => remove(id)))
+      showSuccess(`Deleted ${selectedItems.length} item(s)`)
+      setSelectedItems([])
+      await fetchFeedback()
+    } catch (error) {
+      showError('Failed to delete some items')
+    }
+  }
+
+  // Export to CSV
+  const exportToCSV = () => {
+    const dataToExport = selectedItems.length > 0 
+      ? feedbackData.filter(item => selectedItems.includes(item.id))
+      : filteredFeedback
+
+    if (dataToExport.length === 0) {
+      showError('No data to export')
+      return
+    }
+
+    // CSV Headers
+    const headers = ['Reference Number', 'Date', 'Student Name', 'Email', 'Student ID', 'College', 'Category', 'Subject', 'Message', 'Status', 'Admin Response']
+    
+    // CSV Rows
+    const rows = dataToExport.map(item => [
+      item.referenceNumber || '',
+      formatDate(item.createdAt),
+      item.isAnonymous ? 'Anonymous' : item.fullName || '',
+      item.email || '',
+      item.studentId || '',
+      item.college || '',
+      item.category || '',
+      `"${(item.subject || '').replace(/"/g, '""')}"`, // Escape quotes
+      `"${(item.message || '').replace(/"/g, '""')}"`,
+      item.status || '',
+      `"${(item.response || '').replace(/"/g, '""')}"`
+    ])
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    // Create and download file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const link = document.createElement('a')
+    const url = URL.createObjectURL(blob)
+    
+    link.setAttribute('href', url)
+    link.setAttribute('download', `feedback-export-${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    showSuccess(`Exported ${dataToExport.length} item(s) to CSV`)
+  }
 
   if (loading) {
     return (
@@ -218,9 +368,12 @@ export default function AdminFeedback() {
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-          <button className="flex items-center justify-center space-x-2 px-4 py-2 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-200 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors">
+          <button 
+            onClick={exportToCSV}
+            className="flex items-center justify-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+          >
             <Download className="w-4 h-4" />
-            <span>Export</span>
+            <span>Export {selectedItems.length > 0 ? `(${selectedItems.length})` : ''}</span>
           </button>
           <button 
             onClick={handleManualRefresh}
@@ -333,31 +486,15 @@ export default function AdminFeedback() {
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-school-grey-400 dark:text-gray-500" />
             <input
               type="text"
-              placeholder="Search feedback..."
+              placeholder="Search by name, email, student ID, reference number..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all text-school-grey-800 dark:text-white placeholder-school-grey-400 dark:placeholder-gray-500"
             />
           </div>
 
-          {/* Filters Row */}
+          {/* Basic Filters Row */}
           <div className="grid grid-cols-2 gap-3">
-            {/* Status Filter */}
-            <div className="relative">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="appearance-none w-full px-3 md:px-4 py-3 pr-10 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red transition-all text-school-grey-800 dark:text-white text-sm"
-              >
-                {statusOptions.map((status) => (
-                  <option key={status} value={status}>
-                    {status === 'all' ? 'All Status' : status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-school-grey-400 dark:text-gray-500 pointer-events-none" />
-            </div>
-
             {/* Category Filter */}
             <div className="relative">
               <select
@@ -372,28 +509,139 @@ export default function AdminFeedback() {
               </select>
               <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-school-grey-400 dark:text-gray-500 pointer-events-none" />
             </div>
+
+            {/* Advanced Filters Toggle */}
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className="flex items-center justify-center space-x-2 px-4 py-3 bg-school-grey-100 dark:bg-gray-700 text-school-grey-700 dark:text-gray-200 rounded-xl hover:bg-school-grey-200 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
+            >
+              <span>{showAdvancedFilters ? 'Hide' : 'Show'} Advanced</span>
+              <motion.div
+                animate={{ rotate: showAdvancedFilters ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-4 h-4" />
+              </motion.div>
+            </button>
           </div>
+
+          {/* Advanced Filters */}
+          <AnimatePresence>
+            {showAdvancedFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-3 border-t border-school-grey-200 dark:border-gray-700">
+                  {/* College Filter */}
+                  <div className="relative">
+                    <select
+                      value={collegeFilter}
+                      onChange={(e) => setCollegeFilter(e.target.value)}
+                      className="appearance-none w-full px-3 md:px-4 py-3 pr-10 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all text-sm"
+                    >
+                      <option value="all">All Colleges</option>
+                      {colleges.map((college) => (
+                        <option key={college} value={college}>{college}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-school-grey-400 dark:text-gray-500 pointer-events-none" />
+                  </div>
+
+                  {/* Date From */}
+                  <div>
+                    <label className="block text-xs text-school-grey-600 dark:text-gray-400 mb-1 ml-1">From Date</label>
+                    <input
+                      type="date"
+                      value={dateFromFilter}
+                      onChange={(e) => setDateFromFilter(e.target.value)}
+                      className="w-full px-3 md:px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all text-sm"
+                    />
+                  </div>
+
+                  {/* Date To */}
+                  <div className="md:col-span-2">
+                    <label className="block text-xs text-school-grey-600 dark:text-gray-400 mb-1 ml-1">To Date</label>
+                    <input
+                      type="date"
+                      value={dateToFilter}
+                      onChange={(e) => setDateToFilter(e.target.value)}
+                      className="w-full px-3 md:px-4 py-3 bg-school-grey-50 dark:bg-gray-700 border border-school-grey-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red text-school-grey-800 dark:text-white transition-all text-sm"
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Results count */}
+        {/* Results count and clear filters */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3 pt-3 border-t border-school-grey-200 dark:border-gray-700">
           <p className="text-xs sm:text-sm text-school-grey-600 dark:text-gray-400">
             Showing <span className="font-semibold text-school-grey-800 dark:text-white">{filteredFeedback.length}</span> of <span className="font-semibold text-school-grey-800 dark:text-white">{feedbackData.length}</span> items
           </p>
-          {(searchTerm || statusFilter !== 'all' || categoryFilter !== 'all') && (
+          {hasActiveFilters && (
             <button
-              onClick={() => {
-                setSearchTerm('')
-                setStatusFilter('all')
-                setCategoryFilter('all')
-              }}
-              className="text-xs sm:text-sm text-university-red hover:underline text-left sm:text-right"
+              onClick={clearFilters}
+              className="text-xs sm:text-sm text-university-red hover:underline text-left sm:text-right font-medium"
             >
-              Clear filters
+              Clear all filters
             </button>
           )}
         </div>
       </div>
+
+      {/* Bulk Actions Bar */}
+      <AnimatePresence>
+        {selectedItems.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="bg-university-red text-white rounded-2xl p-4 shadow-lg"
+          >
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="flex items-center space-x-3">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-medium">{selectedItems.length} item{selectedItems.length > 1 ? 's' : ''} selected</span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <select
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      handleBulkStatusChange(e.target.value)
+                      e.target.value = ''
+                    }
+                  }}
+                  className="px-3 py-2 bg-white text-school-grey-800 rounded-lg text-sm font-medium cursor-pointer"
+                  defaultValue=""
+                >
+                  <option value="" disabled>Change Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In Progress</option>
+                  <option value="responded">Responded</option>
+                  <option value="resolved">Resolved</option>
+                </select>
+                <button
+                  onClick={handleBulkDelete}
+                  className="px-3 py-2 bg-white text-red-600 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+                >
+                  Delete Selected
+                </button>
+                <button
+                  onClick={() => setSelectedItems([])}
+                  className="px-3 py-2 bg-white/20 text-white rounded-lg text-sm font-medium hover:bg-white/30 transition-colors"
+                >
+                  Clear Selection
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Feedback List - Table view (hidden on mobile) */}
       <div className="hidden md:block bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-school-grey-100 dark:border-gray-700 overflow-hidden transition-colors">
@@ -401,6 +649,14 @@ export default function AdminFeedback() {
           <table className="w-full">
             <thead className="bg-school-grey-50 dark:bg-gray-700 border-b border-school-grey-100 dark:border-gray-600">
               <tr>
+                <th className="text-left px-6 py-4">
+                  <input
+                    type="checkbox"
+                    checked={selectedItems.length === filteredFeedback.length && filteredFeedback.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 text-university-red border-school-grey-300 rounded focus:ring-university-red cursor-pointer"
+                  />
+                </th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Reference</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Subject</th>
                 <th className="text-left px-6 py-4 text-sm font-semibold text-school-grey-600 dark:text-gray-300">Category</th>
@@ -418,7 +674,7 @@ export default function AdminFeedback() {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
-                    <td colSpan="7" className="px-6 py-12 text-center">
+                    <td colSpan="8" className="px-6 py-12 text-center">
                       <div className="flex flex-col items-center justify-center">
                         <MessageSquare className="w-12 h-12 text-school-grey-300 dark:text-gray-600 mb-3" />
                         <p className="text-school-grey-600 dark:text-gray-400 font-medium">No feedback found</p>
@@ -442,6 +698,14 @@ export default function AdminFeedback() {
                         transition={{ delay: index * 0.03 }}
                         className="hover:bg-school-grey-50 dark:hover:bg-gray-700 transition-colors"
                       >
+                        <td className="px-6 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.includes(item.id)}
+                            onChange={() => toggleSelectItem(item.id)}
+                            className="w-4 h-4 text-university-red border-school-grey-300 rounded focus:ring-university-red cursor-pointer"
+                          />
+                        </td>
                         <td className="px-6 py-4">
                           <span className="font-mono text-xs text-school-grey-600 dark:text-gray-400 bg-school-grey-100 dark:bg-gray-700 px-2 py-1 rounded">
                             {item.referenceNumber}
