@@ -6,6 +6,16 @@
 -- =====================================================
 
 -- =====================================================
+-- MIGRATION: DROP UPDATED TABLES TO RECREATE WITH NEW STRUCTURE
+-- Run this section if you have old table structures
+-- =====================================================
+
+-- Drop tables that have been restructured (this will recreate them with new structure)
+DROP TABLE IF EXISTS site_content CASCADE;
+DROP TABLE IF EXISTS page_content CASCADE;
+DROP TABLE IF EXISTS governance_documents CASCADE;
+
+-- =====================================================
 -- TABLE OF CONTENTS
 -- =====================================================
 -- 1. Officers & Organizational Chart
@@ -16,8 +26,8 @@
 -- 6. Governance Documents (Constitution & Bylaws)
 -- 7. Feedback (TINIG DINIG)
 -- 8. Financial Transactions
--- 9. Site Content (Dynamic page content)
--- 10. Page Content (Full page management)
+-- 9. Site Content (Dynamic homepage content)
+-- 10. Page Content (Page text content)
 -- 11. Storage Buckets & Policies
 -- 12. Indexes
 -- 13. Row Level Security (RLS) Policies
@@ -208,12 +218,19 @@ CREATE TABLE IF NOT EXISTS governance_documents (
   
   -- Document information
   type TEXT NOT NULL CHECK (type IN ('constitution', 'bylaw')),
-  article_number TEXT NOT NULL,
   title TEXT NOT NULL,
-  content TEXT NOT NULL,
   
-  -- Structured content
+  -- For article-based documents
+  article_number TEXT,
+  content TEXT,
   sections JSONB, -- Array of sections/subsections for complex documents
+  
+  -- For file-based documents
+  version TEXT,
+  file_url TEXT,
+  file_name TEXT,
+  status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  published_at DATE,
   
   -- Display & Status
   order_index INTEGER DEFAULT 0,
@@ -224,8 +241,12 @@ CREATE TABLE IF NOT EXISTS governance_documents (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-COMMENT ON TABLE governance_documents IS 'Stores USG constitution and bylaws with structured content';
+COMMENT ON TABLE governance_documents IS 'Stores USG constitution and bylaws - both article-based and file-based documents';
 COMMENT ON COLUMN governance_documents.sections IS 'JSONB array for complex document structure (subsections, clauses, etc.)';
+COMMENT ON COLUMN governance_documents.article_number IS 'Article/section number (e.g., "I", "II", "1", "2") - for article-based documents';
+COMMENT ON COLUMN governance_documents.content IS 'Article content - for article-based documents';
+COMMENT ON COLUMN governance_documents.file_url IS 'URL to PDF document - for file-based documents';
+COMMENT ON COLUMN governance_documents.file_name IS 'Original filename - for file-based documents';
 
 -- =====================================================
 -- 7. FEEDBACK (TINIG DINIG)
@@ -294,8 +315,9 @@ COMMENT ON COLUMN financial_transactions.amount IS 'Positive for income, negativ
 COMMENT ON COLUMN financial_transactions.reference_no IS 'Unique transaction reference number';
 
 -- =====================================================
--- 9. SITE CONTENT
--- Stores dynamic content for various page sections
+-- 9. SITE CONTENT (Dynamic Homepage Content)
+-- Stores dynamic content for home page sections
+-- (stats, features, core values, achievements)
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS site_content (
@@ -303,32 +325,38 @@ CREATE TABLE IF NOT EXISTS site_content (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   
   -- Content identification
-  section TEXT NOT NULL, -- e.g., 'hero_stats', 'core_values', 'achievements'
-  key TEXT NOT NULL,
-  value TEXT,
+  section_type TEXT NOT NULL CHECK (section_type IN ('heroStats', 'homeStats', 'coreValues', 'heroFeatures', 'achievements')),
+  section_key TEXT NOT NULL,
+  
+  -- Content fields
+  title TEXT,
+  content TEXT,
   
   -- Flexible metadata storage
-  metadata JSONB, -- For icons, colors, paths, additional data
+  metadata JSONB DEFAULT '{}', -- For icons, values, labels, descriptions, paths, colors
   
   -- Display & Status
-  order_index INTEGER DEFAULT 0,
-  is_active BOOLEAN DEFAULT true,
+  display_order INTEGER DEFAULT 0,
+  active BOOLEAN DEFAULT true,
   
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   
   -- Ensure unique section-key combination
-  UNIQUE(section, key)
+  UNIQUE(section_type, section_key)
 );
 
-COMMENT ON TABLE site_content IS 'Flexible storage for dynamic content across various page sections';
-COMMENT ON COLUMN site_content.section IS 'Section identifier (e.g., hero_stats, core_values, achievements)';
-COMMENT ON COLUMN site_content.metadata IS 'JSONB for flexible data storage (icons, colors, URLs, etc.)';
+COMMENT ON TABLE site_content IS 'Stores dynamic content for home page sections including stats, features, and core values';
+COMMENT ON COLUMN site_content.section_type IS 'Type of section: heroStats, homeStats, coreValues, heroFeatures, achievements';
+COMMENT ON COLUMN site_content.section_key IS 'Unique identifier within section type (e.g., students-served)';
+COMMENT ON COLUMN site_content.metadata IS 'JSON object containing icon, value, label, description, path, color fields';
+COMMENT ON COLUMN site_content.display_order IS 'Order in which items appear (lower numbers appear first)';
 
 -- =====================================================
--- 10. PAGE CONTENT
--- Stores full page content for custom pages
+-- 10. PAGE CONTENT (Page Text Content)
+-- Stores text content for specific pages
+-- (about, mission, vision)
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS page_content (
@@ -336,21 +364,27 @@ CREATE TABLE IF NOT EXISTS page_content (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   
   -- Page identification
-  page_slug TEXT NOT NULL UNIQUE, -- e.g., 'about', 'home', 'governance'
+  page TEXT NOT NULL CHECK (page IN ('home', 'about')),
+  section_key TEXT NOT NULL,
   
-  -- Page content
-  title TEXT,
-  subtitle TEXT,
-  content JSONB, -- Flexible storage for various content types
+  -- Content fields
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  
+  -- Status
+  active BOOLEAN DEFAULT true,
   
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Ensure unique page-section combination
+  UNIQUE(page, section_key)
 );
 
-COMMENT ON TABLE page_content IS 'Stores full page content for dynamic page management';
-COMMENT ON COLUMN page_content.page_slug IS 'Unique page identifier used in URL routing';
-COMMENT ON COLUMN page_content.content IS 'JSONB for flexible content structure (paragraphs, images, lists, etc.)';
+COMMENT ON TABLE page_content IS 'Stores text content for specific pages like about, mission, vision';
+COMMENT ON COLUMN page_content.page IS 'Page identifier: home, about';
+COMMENT ON COLUMN page_content.section_key IS 'Section identifier within page (e.g., about, mission, vision)';
 
 -- =====================================================
 -- 11. STORAGE BUCKETS & POLICIES
@@ -435,14 +469,16 @@ CREATE INDEX IF NOT EXISTS idx_feedback_is_anonymous ON feedback(is_anonymous);
 CREATE INDEX IF NOT EXISTS idx_transactions_date ON financial_transactions(date);
 CREATE INDEX IF NOT EXISTS idx_transactions_category ON financial_transactions(category);
 CREATE INDEX IF NOT EXISTS idx_transactions_status ON financial_transactions(status);
-CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON financial_transactions(created_at);
 
 -- Site content indexes
-CREATE INDEX IF NOT EXISTS idx_site_content_section ON site_content(section);
-CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(is_active);
+CREATE INDEX IF NOT EXISTS idx_site_content_section_type ON site_content(section_type);
+CREATE INDEX IF NOT EXISTS idx_site_content_active ON site_content(active);
+CREATE INDEX IF NOT EXISTS idx_site_content_display_order ON site_content(display_order);
 
 -- Page content indexes
-CREATE INDEX IF NOT EXISTS idx_page_content_slug ON page_content(page_slug);
+CREATE INDEX IF NOT EXISTS idx_page_content_page ON page_content(page);
+CREATE INDEX IF NOT EXISTS idx_page_content_active ON page_content(active);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON financial_transactions(created_at);
 
 -- =====================================================
 -- 13. ROW LEVEL SECURITY (RLS) POLICIES
@@ -546,19 +582,19 @@ CREATE POLICY "Public read access"
   FOR SELECT 
   USING (true);
 
--- Site Content
+-- Site Content (public can view active content only)
 DROP POLICY IF EXISTS "Public read access" ON site_content;
 CREATE POLICY "Public read access" 
   ON site_content 
   FOR SELECT 
-  USING (true);
+  USING (active = true);
 
--- Page Content
+-- Page Content (public can view active content only)
 DROP POLICY IF EXISTS "Public read access" ON page_content;
 CREATE POLICY "Public read access" 
   ON page_content 
   FOR SELECT 
-  USING (true);
+  USING (active = true);
 
 -- -----------------------------------------------------
 -- ADMIN WRITE ACCESS

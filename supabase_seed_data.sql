@@ -134,55 +134,25 @@ INSERT INTO governance_documents (type, article_number, title, content, sections
 ('bylaw', '7', 'Amendments to By-Laws', '', '["Amendments may be proposed by any Council member.", "Proposed amendments must be submitted in writing at least one meeting before voting.", "A two-thirds vote of all members present shall be required for adoption."]'::jsonb, 7);
 
 -- =====================================================
--- 6. SITE CONTENT
+-- 6. GOVERNANCE DOCUMENTS - FILE-BASED DOCUMENTS
 -- =====================================================
 
--- Hero Stats
-INSERT INTO site_content (section, key, value, metadata, order_index) VALUES
-('hero_stats', 'students', '10,000+', '{"label": "Students Served", "icon": "Users"}'::jsonb, 1),
-('hero_stats', 'programs', '50+', '{"label": "Programs & Events", "icon": "Star"}'::jsonb, 2),
-('hero_stats', 'transparency', '100%', '{"label": "Transparency", "icon": "Shield"}'::jsonb, 3),
-('hero_stats', 'support', '24/7', '{"label": "Support Available", "icon": "Heart"}'::jsonb, 4);
+INSERT INTO governance_documents (title, type, version, file_url, file_name, status, published_at) VALUES
+('USG Constitution 2024',
+ 'constitution',
+ '2024.1',
+ 'https://example.com/documents/usg-constitution-2024.pdf',
+ 'usg-constitution-2024.pdf',
+ 'published',
+ '2024-01-15'),
 
--- Home Stats
-INSERT INTO site_content (section, key, value, metadata, order_index) VALUES
-('home_stats', 'students_represented', '15,000+', '{"label": "Students Represented", "icon": "Users"}'::jsonb, 1),
-('home_stats', 'projects_completed', '50+', '{"label": "Projects Completed", "icon": "Award"}'::jsonb, 2),
-('home_stats', 'budget_managed', '₱2M+', '{"label": "Budget Managed", "icon": "TrendingUp"}'::jsonb, 3),
-('home_stats', 'commitment', '100%', '{"label": "Commitment to You", "icon": "Heart"}'::jsonb, 4);
-
--- Core Values
-INSERT INTO site_content (section, key, value, metadata, order_index) VALUES
-('core_values', 'service', 'Service', '{"description": "Dedicated to serving the student body with passion and commitment.", "icon": "Heart", "color": "bg-red-500"}'::jsonb, 1),
-('core_values', 'transparency', 'Transparency', '{"description": "Open and honest in all our dealings and decision-making processes.", "icon": "Eye", "color": "bg-blue-500"}'::jsonb, 2),
-('core_values', 'unity', 'Unity', '{"description": "Fostering solidarity and collaboration among all students.", "icon": "Users", "color": "bg-green-500"}'::jsonb, 3),
-('core_values', 'excellence', 'Excellence', '{"description": "Striving for the highest standards in everything we do.", "icon": "Award", "color": "bg-purple-500"}'::jsonb, 4),
-('core_values', 'innovation', 'Innovation', '{"description": "Embracing new ideas and creative solutions for student welfare.", "icon": "Lightbulb", "color": "bg-yellow-500"}'::jsonb, 5),
-('core_values', 'accountability', 'Accountability', '{"description": "Taking responsibility for our actions and their outcomes.", "icon": "CheckCircle", "color": "bg-indigo-500"}'::jsonb, 6);
-
--- Achievements
-INSERT INTO site_content (section, key, value, order_index) VALUES
-('achievements', 'library_hours', 'Successfully advocated for extended library hours', 1),
-('achievements', 'tinig_dinig', 'Launched the TINIG DINIG feedback system', 2),
-('achievements', 'events', 'Organized 50+ student events and activities', 3),
-('achievements', 'funds', 'Managed ₱2M+ student funds with full transparency', 4),
-('achievements', 'scholarships', 'Established scholarship programs for deserving students', 5),
-('achievements', 'partnerships', 'Created partnerships with local businesses for student discounts', 6);
-
--- Hero Features
-INSERT INTO site_content (section, key, value, metadata, order_index) VALUES
-('hero_features', 'governance', 'Governance Hub', '{"description": "Access the USG Constitution, By-Laws, and organizational structure.", "path": "/governance", "icon": "Users", "color": "from-blue-500 to-blue-600"}'::jsonb, 1),
-('hero_features', 'bulletins', 'Bulletins & News', '{"description": "Stay updated with announcements and official issuances.", "path": "/bulletins", "icon": "FileText", "color": "from-green-500 to-green-600"}'::jsonb, 2),
-('hero_features', 'transparency', 'Transparency Portal', '{"description": "View financial transactions and fund allocations.", "path": "/transparency", "icon": "DollarSign", "color": "from-purple-500 to-purple-600"}'::jsonb, 3);
-
--- Page Content (About, Mission, Vision)
-INSERT INTO page_content (page_slug, title, subtitle, content) VALUES
-('about', 'University Student Government', 'Designing Spaces for a Better Future - Your voice, our mission', 
- '{"intro": "The University Student Government serves as the official voice of the student body. We are committed to advocating for student welfare, fostering academic excellence, and creating a vibrant campus community.", "commitment": "Through transparency, accountability, and active engagement, we work tirelessly to ensure that every student''s concerns are heard and addressed."}'::jsonb),
-('mission', 'Our Mission', '', 
- '{"text": "To empower and represent the student body through transparent governance, innovative programs, and unwavering commitment to student welfare and academic excellence."}'::jsonb),
-('vision', 'Our Vision', '', 
- '{"text": "A united student community where every voice matters, every concern is addressed, and every student thrives in an environment of excellence, integrity, and inclusive leadership."}'::jsonb);
+('USG By-Laws 2024',
+ 'bylaw',
+ '2024.1',
+ 'https://example.com/documents/usg-bylaws-2024.pdf',
+ 'usg-bylaws-2024.pdf',
+ 'published',
+ '2024-01-15');
 
 -- =====================================================
 -- 7. ANNOUNCEMENTS & BULLETINS
@@ -254,3 +224,69 @@ INSERT INTO financial_transactions (date, reference_no, description, category, a
 ('2025-01-03', 'REF-2025-004', 'Office Supplies Purchase', 'Administrative', -15000.00, 'Completed'),
 ('2024-12-20', 'REF-2024-099', 'Campus Cleanup Initiative', 'Projects', -30000.00, 'Completed'),
 ('2024-12-15', 'REF-2024-098', 'Student Organization Subsidy', 'Subsidy', -100000.00, 'Completed');
+
+-- =====================================================
+-- 11. SITE CONTENT (Dynamic Homepage Content)
+-- =====================================================
+
+INSERT INTO site_content (section_type, section_key, title, content, metadata, display_order, active)
+VALUES
+-- Hero Stats (4 items)
+('heroStats', 'students-served', 'Students Served', NULL, 
+ '{"icon": "Users", "value": "10,000+", "label": "Students Served"}', 1, true),
+('heroStats', 'programs-events', 'Programs & Events', NULL, 
+ '{"icon": "Star", "value": "50+", "label": "Programs & Events"}', 2, true),
+('heroStats', 'transparency', 'Transparency', NULL, 
+ '{"icon": "Shield", "value": "100%", "label": "Transparency"}', 3, true),
+('heroStats', 'support-available', 'Support Available', NULL, 
+ '{"icon": "Heart", "value": "24/7", "label": "Support Available"}', 4, true),
+
+-- Home Stats (4 items)
+('homeStats', 'students-represented', 'Students Represented', NULL, 
+ '{"icon": "Users", "value": "15,000+", "label": "Students Represented"}', 1, true),
+('homeStats', 'projects-completed', 'Projects Completed', NULL, 
+ '{"icon": "Award", "value": "50+", "label": "Projects Completed"}', 2, true),
+('homeStats', 'budget-managed', 'Budget Managed', NULL, 
+ '{"icon": "TrendingUp", "value": "₱2M+", "label": "Budget Managed"}', 3, true),
+('homeStats', 'commitment', 'Commitment to You', NULL, 
+ '{"icon": "Heart", "value": "100%", "label": "Commitment to You"}', 4, true),
+
+-- Core Values (5 items)
+('coreValues', 'transparency', 'Transparency', 'We operate with complete openness and honesty', '{}', 1, true),
+('coreValues', 'accountability', 'Accountability', 'We take responsibility for our actions and decisions', '{}', 2, true),
+('coreValues', 'service', 'Service', 'We are dedicated to serving the student body', '{}', 3, true),
+('coreValues', 'excellence', 'Excellence', 'We strive for the highest standards in everything we do', '{}', 4, true),
+('coreValues', 'unity', 'Unity', 'We work together as one student government', '{}', 5, true),
+
+-- Hero Features (3 items)
+('heroFeatures', 'governance-hub', 'Governance Hub', NULL, 
+ '{"icon": "Users", "description": "Access the USG Constitution, By-Laws, and organizational structure.", "path": "/governance", "color": "from-blue-500 to-blue-600"}', 1, true),
+('heroFeatures', 'bulletins-news', 'Bulletins & News', NULL, 
+ '{"icon": "FileText", "description": "Stay updated with announcements and official issuances.", "path": "/bulletins", "color": "from-green-500 to-green-600"}', 2, true),
+('heroFeatures', 'transparency-portal', 'Transparency Portal', NULL, 
+ '{"icon": "DollarSign", "description": "View financial transactions and fund allocations.", "path": "/transparency", "color": "from-purple-500 to-purple-600"}', 3, true),
+
+-- Achievements (3 items)
+('achievements', 'student-welfare', 'Enhanced Student Welfare', 'Successfully implemented new student support programs benefiting over 5,000 students', '{}', 1, true),
+('achievements', 'budget-transparency', 'Budget Transparency Initiative', 'Launched real-time financial reporting system for complete transparency', '{}', 2, true),
+('achievements', 'facilities-improvement', 'Campus Facilities Upgrade', 'Collaborated with administration to improve study areas and internet connectivity', '{}', 3, true);
+
+-- =====================================================
+-- 12. PAGE CONTENT (Text Content)
+-- =====================================================
+
+INSERT INTO page_content (page, section_key, title, content, active)
+VALUES
+-- Home page - About section
+('home', 'about', 'Your Voice, Our Mission', 
+ 'The University Student Government serves as the official voice of the student body. We are committed to advocating for student welfare, fostering academic excellence, and creating a vibrant campus community.
+
+Through transparency, accountability, and active engagement, we work tirelessly to ensure that every student''s concerns are heard and addressed.', true),
+
+-- About page - Mission
+('about', 'mission', 'Our Mission', 
+ 'To serve as the unified voice of the student body, advocating for their rights, welfare, and interests. We are committed to fostering a culture of transparency, accountability, and excellence in student governance while promoting active participation in university affairs.', true),
+
+-- About page - Vision
+('about', 'vision', 'Our Vision', 
+ 'To be a student government that exemplifies excellence, integrity, and inclusivity, empowering every student to actively participate in shaping their university experience and creating lasting positive change in the academic community.', true);

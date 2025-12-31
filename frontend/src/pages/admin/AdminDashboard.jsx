@@ -250,6 +250,13 @@ export default function AdminDashboard() {
                 <FileText className="w-5 h-5" />
                 <span className="font-medium">Upload Report</span>
               </Link>
+              <Link 
+                to="/admin/site-content"
+                className="flex items-center space-x-3 p-3 bg-purple-50 text-purple-600 rounded-xl hover:bg-purple-100 transition-colors"
+              >
+                <FileText className="w-5 h-5" />
+                <span className="font-medium">Edit Site Content</span>
+              </Link>
             </div>
           </motion.div>
 

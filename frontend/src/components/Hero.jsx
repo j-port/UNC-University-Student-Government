@@ -16,8 +16,9 @@ import {
 import USGLogo from '../assets/USG LOGO NO BG.png'
 import CampusBg from '../assets/USG COVER.jpg'
 import { useRef } from 'react'
+import { useSiteContent } from '../hooks/useSiteContent'
 
-const features = [
+const defaultFeatures = [
   {
     icon: Users,
     title: 'Governance Hub',
@@ -41,12 +42,24 @@ const features = [
   },
 ]
 
-const stats = [
+const defaultStats = [
   { number: '10,000+', label: 'Students Served', icon: Users },
   { number: '50+', label: 'Programs & Events', icon: Star },
   { number: '100%', label: 'Transparency', icon: Shield },
   { number: '24/7', label: 'Support Available', icon: Heart },
 ]
+
+// Icon mapping for dynamic content
+const iconMap = {
+  Users,
+  FileText,
+  DollarSign,
+  MessageSquare,
+  Megaphone,
+  Shield,
+  Heart,
+  Star,
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -81,6 +94,7 @@ const floatAnimation = {
 }
 
 export default function Hero() {
+  const { content } = useSiteContent()
   const ref = useRef(null)
   const { scrollYProgress } = useScroll({
     target: ref,
@@ -90,6 +104,26 @@ export default function Hero() {
   const backgroundY = useTransform(scrollYProgress, [0, 1], ['0%', '50%'])
   const textY = useTransform(scrollYProgress, [0, 1], ['0%', '100%'])
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0])
+
+  // Use dynamic stats from database or fall back to defaults
+  const stats = content.heroStats?.length > 0
+    ? content.heroStats.map(stat => ({
+        number: stat.value,
+        label: stat.label,
+        icon: iconMap[stat.icon] || Users,
+      }))
+    : defaultStats
+
+  // Use dynamic features from database or fall back to defaults
+  const features = content.heroFeatures?.length > 0
+    ? content.heroFeatures.map(feature => ({
+        icon: iconMap[feature.icon] || Users,
+        title: feature.title,
+        description: feature.description,
+        path: feature.path,
+        color: feature.color || 'from-blue-500 to-blue-600',
+      }))
+    : defaultFeatures
 
   return (
     <>

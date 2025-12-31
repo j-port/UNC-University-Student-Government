@@ -26,6 +26,7 @@ const navItems = [
   { name: 'Organizational Chart', icon: Users, path: '/admin/orgchart' },
   { name: 'Financial Reports', icon: DollarSign, path: '/admin/reports' },
   { name: 'Documents', icon: FileText, path: '/admin/documents' },
+  { name: 'Site Content', icon: FileText, path: '/admin/site-content' },
   { name: 'Settings', icon: Settings, path: '/admin/settings' },
 ]
 

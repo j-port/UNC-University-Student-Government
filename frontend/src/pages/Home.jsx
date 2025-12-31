@@ -2,13 +2,24 @@ import { motion } from 'framer-motion'
 import Hero from '../components/Hero'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Users, Award, TrendingUp, Heart } from 'lucide-react'
+import { useSiteContent } from '../hooks/useSiteContent'
+import LoadingSpinner from '../components/LoadingSpinner'
 
-const stats = [
+// Default fallback stats if database is empty
+const defaultStats = [
   { icon: Users, value: '15,000+', label: 'Students Represented' },
   { icon: Award, value: '50+', label: 'Projects Completed' },
   { icon: TrendingUp, value: '₱2M+', label: 'Budget Managed' },
   { icon: Heart, value: '100%', label: 'Commitment to You' },
 ]
+
+// Icon mapping for dynamic stats
+const iconMap = {
+  Users,
+  Award,
+  TrendingUp,
+  Heart,
+}
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -30,6 +41,38 @@ const itemVariants = {
 }
 
 export default function Home() {
+  const { content, loading, error } = useSiteContent()
+
+  // Use dynamic stats from database or fall back to defaults
+  const stats = content.homeStats?.length > 0
+    ? content.homeStats.map(stat => ({
+        icon: iconMap[stat.icon] || Users,
+        value: stat.value,
+        label: stat.label,
+      }))
+    : defaultStats
+
+  // Get dynamic content or use defaults
+  const coreValues = content.coreValues?.length > 0
+    ? content.coreValues.map(v => v.title || v.content)
+    : ['Transparency', 'Accountability', 'Service', 'Excellence', 'Unity']
+
+  const aboutTitle = content.about?.title || "Your Voice, Our Mission"
+  const aboutContent = content.about?.content || `The University Student Government serves as the official voice of the student body. 
+We are committed to advocating for student welfare, fostering academic excellence, 
+and creating a vibrant campus community.
+
+Through transparency, accountability, and active engagement, we work tirelessly 
+to ensure that every student's concerns are heard and addressed.`
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </main>
+    )
+  }
+
   return (
     <main>
       <Hero />
@@ -75,17 +118,13 @@ export default function Home() {
             >
               <span className="text-university-red font-medium">About USG</span>
               <h2 className="section-title mt-2 mb-6">
-                Your Voice, Our Mission
+                {aboutTitle}
               </h2>
-              <p className="text-school-grey-600 mb-6">
-                The University Student Government serves as the official voice of the student body. 
-                We are committed to advocating for student welfare, fostering academic excellence, 
-                and creating a vibrant campus community.
-              </p>
-              <p className="text-school-grey-600 mb-8">
-                Through transparency, accountability, and active engagement, we work tirelessly 
-                to ensure that every student's concerns are heard and addressed.
-              </p>
+              {aboutContent.split('\n\n').map((paragraph, index) => (
+                <p key={index} className="text-school-grey-600 mb-6">
+                  {paragraph}
+                </p>
+              ))}
               <Link to="/about">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
@@ -115,7 +154,7 @@ export default function Home() {
                   Our Core Values
                 </h3>
                 <ul className="space-y-2">
-                  {['Transparency', 'Accountability', 'Service', 'Excellence', 'Unity'].map((value, index) => (
+                  {coreValues.map((value, index) => (
                     <motion.li
                       key={value}
                       initial={{ opacity: 0, x: 20 }}
