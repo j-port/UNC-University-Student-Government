@@ -41,11 +41,9 @@ export default function Transparency() {
     useEffect(() => {
         const loadTransactions = async () => {
             setLoading(true);
-            const { data, error } = await fetchFinancialTransactions(
-                searchTerm
-            );
+            const response = await financialTransactionsAPI.getAll(searchTerm);
 
-            setTransactions(data || []);
+            setTransactions(response.data || []);
             setLoading(false);
         };
 
@@ -57,12 +55,11 @@ export default function Transparency() {
         const loadFinancialReports = async () => {
             setReportsLoading(true);
             try {
-                const { data } = await fetchIssuances({
+                const response = await issuancesAPI.getAll({
                     status: "published",
-                    limit: null,
                 });
                 // Filter only Financial Report type
-                const reports = (data || []).filter(
+                const reports = (response.data || []).filter(
                     (item) => item.type === "Financial Report"
                 );
                 setFinancialReports(reports);

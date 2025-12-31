@@ -6,11 +6,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../components/PageHeader";
 import LoadingSpinner from "../components/LoadingSpinner";
-import {
-    fetchOfficers,
-    fetchOrganizations,
-    fetchCommittees,
-} from "../lib/supabaseClient";
+import { officersAPI, organizationsAPI, committeesAPI } from "../lib/api";
 import { Link } from "react-router-dom";
 import USGLogo from "../assets/USG LOGO NO BG.png";
 import {
@@ -130,10 +126,10 @@ export default function OrgChart() {
             try {
                 const [execResult, legResult, committeesResult, orgsResult] =
                     await Promise.all([
-                        fetchOfficers("executive"),
-                        fetchOfficers("legislative"),
-                        fetchCommittees(),
-                        fetchOrganizations(),
+                        officersAPI.getAll("executive"),
+                        officersAPI.getAll("legislative"),
+                        committeesAPI.getAll(),
+                        organizationsAPI.getAll(),
                     ]);
 
                 setExecutiveOfficers(execResult.data || []);
@@ -231,7 +227,9 @@ export default function OrgChart() {
                             {executiveOfficers.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <User className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No executive officers available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No executive officers available yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
@@ -240,35 +238,35 @@ export default function OrgChart() {
                                     animate="visible"
                                     className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {executiveOfficers.map((officer) => (
-                                    <motion.div
-                                        key={officer.id}
-                                        variants={itemVariants}
-                                        className="bg-school-grey-50 rounded-xl p-6 text-center">
-                                        {officer.image_url && (
-                                            <img
-                                                src={officer.image_url}
-                                                alt={officer.name}
-                                                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                                            />
-                                        )}
-                                        {!officer.image_url && (
-                                            <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-university-red/10 flex items-center justify-center">
-                                                <User className="w-12 h-12 text-university-red" />
-                                            </div>
-                                        )}
-                                        <h3 className="font-display font-semibold text-school-grey-800 mb-1">
-                                            {officer.name}
-                                        </h3>
-                                        <p className="text-sm text-university-red font-medium mb-2">
-                                            {officer.position}
-                                        </p>
-                                        {officer.email && (
-                                            <p className="text-xs text-school-grey-500">
-                                                {officer.email}
+                                        <motion.div
+                                            key={officer.id}
+                                            variants={itemVariants}
+                                            className="bg-school-grey-50 rounded-xl p-6 text-center">
+                                            {officer.image_url && (
+                                                <img
+                                                    src={officer.image_url}
+                                                    alt={officer.name}
+                                                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                                                />
+                                            )}
+                                            {!officer.image_url && (
+                                                <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-university-red/10 flex items-center justify-center">
+                                                    <User className="w-12 h-12 text-university-red" />
+                                                </div>
+                                            )}
+                                            <h3 className="font-display font-semibold text-school-grey-800 mb-1">
+                                                {officer.name}
+                                            </h3>
+                                            <p className="text-sm text-university-red font-medium mb-2">
+                                                {officer.position}
                                             </p>
-                                        )}
-                                    </motion.div>
-                                ))}
+                                            {officer.email && (
+                                                <p className="text-xs text-school-grey-500">
+                                                    {officer.email}
+                                                </p>
+                                            )}
+                                        </motion.div>
+                                    ))}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -282,7 +280,9 @@ export default function OrgChart() {
                             {legislativeOfficers.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <Scale className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No legislative officers available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No legislative officers available yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
@@ -291,35 +291,35 @@ export default function OrgChart() {
                                     animate="visible"
                                     className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                                     {legislativeOfficers.map((officer) => (
-                                    <motion.div
-                                        key={officer.id}
-                                        variants={itemVariants}
-                                        className="bg-school-grey-50 rounded-xl p-6 text-center">
-                                        {officer.image_url && (
-                                            <img
-                                                src={officer.image_url}
-                                                alt={officer.name}
-                                                className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                                            />
-                                        )}
-                                        {!officer.image_url && (
-                                            <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-blue-500/10 flex items-center justify-center">
-                                                <User className="w-12 h-12 text-blue-500" />
-                                            </div>
-                                        )}
-                                        <h3 className="font-display font-semibold text-school-grey-800 mb-1">
-                                            {officer.name}
-                                        </h3>
-                                        <p className="text-sm text-blue-600 font-medium mb-2">
-                                            {officer.position}
-                                        </p>
-                                        {officer.email && (
-                                            <p className="text-xs text-school-grey-500">
-                                                {officer.email}
+                                        <motion.div
+                                            key={officer.id}
+                                            variants={itemVariants}
+                                            className="bg-school-grey-50 rounded-xl p-6 text-center">
+                                            {officer.image_url && (
+                                                <img
+                                                    src={officer.image_url}
+                                                    alt={officer.name}
+                                                    className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                                                />
+                                            )}
+                                            {!officer.image_url && (
+                                                <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-blue-500/10 flex items-center justify-center">
+                                                    <User className="w-12 h-12 text-blue-500" />
+                                                </div>
+                                            )}
+                                            <h3 className="font-display font-semibold text-school-grey-800 mb-1">
+                                                {officer.name}
+                                            </h3>
+                                            <p className="text-sm text-blue-600 font-medium mb-2">
+                                                {officer.position}
                                             </p>
-                                        )}
-                                    </motion.div>
-                                ))}
+                                            {officer.email && (
+                                                <p className="text-xs text-school-grey-500">
+                                                    {officer.email}
+                                                </p>
+                                            )}
+                                        </motion.div>
+                                    ))}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -332,7 +332,9 @@ export default function OrgChart() {
                             {committees.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <Briefcase className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No committees available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No committees available yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
@@ -341,34 +343,35 @@ export default function OrgChart() {
                                     animate="visible"
                                     className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {committees.map((committee) => {
-                                    const IconComponent =
-                                        iconMap[committee.icon] || Briefcase;
-                                    return (
-                                        <motion.div
-                                            key={committee.id}
-                                            variants={itemVariants}
-                                            className="bg-school-grey-50 rounded-xl p-6">
-                                            <div
-                                                className={`w-12 h-12 ${committee.color} rounded-xl flex items-center justify-center mb-4`}>
-                                                <IconComponent className="w-6 h-6 text-white" />
-                                            </div>
-                                            <h3 className="font-display font-semibold text-school-grey-800 mb-2">
-                                                {committee.name}
-                                            </h3>
-                                            <p className="text-sm text-school-grey-600 mb-3">
-                                                {committee.description}
-                                            </p>
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-school-grey-500">
-                                                    Head:
-                                                </span>
-                                                <span className="font-medium text-school-grey-800">
-                                                    {committee.head_name}
-                                                </span>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
+                                        const IconComponent =
+                                            iconMap[committee.icon] ||
+                                            Briefcase;
+                                        return (
+                                            <motion.div
+                                                key={committee.id}
+                                                variants={itemVariants}
+                                                className="bg-school-grey-50 rounded-xl p-6">
+                                                <div
+                                                    className={`w-12 h-12 ${committee.color} rounded-xl flex items-center justify-center mb-4`}>
+                                                    <IconComponent className="w-6 h-6 text-white" />
+                                                </div>
+                                                <h3 className="font-display font-semibold text-school-grey-800 mb-2">
+                                                    {committee.name}
+                                                </h3>
+                                                <p className="text-sm text-school-grey-600 mb-3">
+                                                    {committee.description}
+                                                </p>
+                                                <div className="flex items-center justify-between text-sm">
+                                                    <span className="text-school-grey-500">
+                                                        Head:
+                                                    </span>
+                                                    <span className="font-medium text-school-grey-800">
+                                                        {committee.head_name}
+                                                    </span>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -381,7 +384,9 @@ export default function OrgChart() {
                             {collegeCouncils.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <GraduationCap className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No college councils available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No college councils available yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
@@ -390,18 +395,18 @@ export default function OrgChart() {
                                     animate="visible"
                                     className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                                     {collegeCouncils.map((council) => (
-                                    <motion.div
-                                        key={council.id}
-                                        variants={itemVariants}
-                                        className={`${council.color} text-white rounded-xl p-4 text-center`}>
-                                        <h3 className="font-display font-bold text-lg mb-1">
-                                            {council.abbreviation}
-                                        </h3>
-                                        <p className="text-xs opacity-90">
-                                            {council.name}
-                                        </p>
-                                    </motion.div>
-                                ))}
+                                        <motion.div
+                                            key={council.id}
+                                            variants={itemVariants}
+                                            className={`${council.color} text-white rounded-xl p-4 text-center`}>
+                                            <h3 className="font-display font-bold text-lg mb-1">
+                                                {council.abbreviation}
+                                            </h3>
+                                            <p className="text-xs opacity-90">
+                                                {council.name}
+                                            </p>
+                                        </motion.div>
+                                    ))}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -414,36 +419,38 @@ export default function OrgChart() {
                             {academicOrgs.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <BookOpen className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No academic organizations available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No academic organizations available yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
                                     variants={containerVariants}
                                     initial="hidden"
                                     animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {academicOrgs.map((org) => (
-                                    <motion.div
-                                        key={org.id}
-                                        variants={itemVariants}
-                                        className="bg-school-grey-50 rounded-xl p-4 flex items-center justify-between">
-                                        <div>
-                                            <h3 className="font-semibold text-school-grey-800">
-                                                {org.name}
-                                            </h3>
-                                            {org.abbreviation && (
-                                                <p className="text-sm text-school-grey-500">
-                                                    ({org.abbreviation})
-                                                </p>
-                                            )}
-                                            {org.college && (
-                                                <p className="text-xs text-orange-600 mt-1">
-                                                    {org.college}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                    className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {academicOrgs.map((org) => (
+                                        <motion.div
+                                            key={org.id}
+                                            variants={itemVariants}
+                                            className="bg-school-grey-50 rounded-xl p-4 flex items-center justify-between">
+                                            <div>
+                                                <h3 className="font-semibold text-school-grey-800">
+                                                    {org.name}
+                                                </h3>
+                                                {org.abbreviation && (
+                                                    <p className="text-sm text-school-grey-500">
+                                                        ({org.abbreviation})
+                                                    </p>
+                                                )}
+                                                {org.college && (
+                                                    <p className="text-xs text-orange-600 mt-1">
+                                                        {org.college}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ))}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -456,7 +463,10 @@ export default function OrgChart() {
                             {nonAcademicOrgs.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <Users className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No non-academic organizations available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No non-academic organizations available
+                                        yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
@@ -465,29 +475,29 @@ export default function OrgChart() {
                                     animate="visible"
                                     className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {nonAcademicOrgs.map((org) => {
-                                    const IconComponent =
-                                        iconMap[org.icon] || Users;
-                                    return (
-                                        <motion.div
-                                            key={org.id}
-                                            variants={itemVariants}
-                                            className="bg-school-grey-50 rounded-xl p-4 flex items-center space-x-3">
-                                            <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                                <IconComponent className="w-5 h-5 text-teal-600" />
-                                            </div>
-                                            <div>
-                                                <h3 className="font-semibold text-school-grey-800 text-sm">
-                                                    {org.name}
-                                                </h3>
-                                                {org.description && (
-                                                    <p className="text-xs text-school-grey-500">
-                                                        {org.description}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
+                                        const IconComponent =
+                                            iconMap[org.icon] || Users;
+                                        return (
+                                            <motion.div
+                                                key={org.id}
+                                                variants={itemVariants}
+                                                className="bg-school-grey-50 rounded-xl p-4 flex items-center space-x-3">
+                                                <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                                    <IconComponent className="w-5 h-5 text-teal-600" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-school-grey-800 text-sm">
+                                                        {org.name}
+                                                    </h3>
+                                                    {org.description && (
+                                                        <p className="text-xs text-school-grey-500">
+                                                            {org.description}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </motion.div>
                             )}
                         </ExpandableSection>
@@ -500,42 +510,46 @@ export default function OrgChart() {
                             {fraternities.length === 0 ? (
                                 <div className="bg-school-grey-50 rounded-xl p-8 text-center">
                                     <Users className="w-12 h-12 text-school-grey-300 mx-auto mb-3" />
-                                    <p className="text-school-grey-600">No fraternities or sororities available yet</p>
+                                    <p className="text-school-grey-600">
+                                        No fraternities or sororities available
+                                        yet
+                                    </p>
                                 </div>
                             ) : (
                                 <motion.div
                                     variants={containerVariants}
                                     initial="hidden"
                                     animate="visible"
-                                className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                                {fraternities.map((org) => (
-                                    <motion.div
-                                        key={org.id}
-                                        variants={itemVariants}
-                                        className="bg-school-grey-50 rounded-xl p-4">
-                                        <h3 className="font-semibold text-school-grey-800 mb-1">
-                                            {org.name}
-                                        </h3>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span
-                                                className={`px-2 py-1 rounded text-xs font-medium ${
-                                                    org.type === "fraternity"
-                                                        ? "bg-blue-100 text-blue-700"
-                                                        : org.type ===
-                                                          "sorority"
-                                                        ? "bg-pink-100 text-pink-700"
-                                                        : "bg-purple-100 text-purple-700"
-                                                }`}>
-                                                {org.type}
-                                            </span>
-                                            {org.founded_year && (
-                                                <span className="text-school-grey-500">
-                                                    Est. {org.founded_year}
+                                    className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                    {fraternities.map((org) => (
+                                        <motion.div
+                                            key={org.id}
+                                            variants={itemVariants}
+                                            className="bg-school-grey-50 rounded-xl p-4">
+                                            <h3 className="font-semibold text-school-grey-800 mb-1">
+                                                {org.name}
+                                            </h3>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span
+                                                    className={`px-2 py-1 rounded text-xs font-medium ${
+                                                        org.type ===
+                                                        "fraternity"
+                                                            ? "bg-blue-100 text-blue-700"
+                                                            : org.type ===
+                                                              "sorority"
+                                                            ? "bg-pink-100 text-pink-700"
+                                                            : "bg-purple-100 text-purple-700"
+                                                    }`}>
+                                                    {org.type}
                                                 </span>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                ))}
+                                                {org.founded_year && (
+                                                    <span className="text-school-grey-500">
+                                                        Est. {org.founded_year}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ))}
                                 </motion.div>
                             )}
                         </ExpandableSection>

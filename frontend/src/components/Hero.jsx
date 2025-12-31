@@ -18,7 +18,7 @@ import CampusBg from "../assets/USG COVER.jpg";
 import { useRef, useState, useEffect } from "react";
 import { useSiteContent } from "../hooks/useSiteContent";
 import { useAutomatedStats } from "../hooks/useAutomatedStats";
-import { fetchAnnouncements } from "../lib/supabaseClient";
+import { announcementsAPI } from "../lib/api";
 
 const defaultFeatures = [];
 
@@ -81,11 +81,11 @@ export default function Hero() {
     // Fetch latest 3 announcements for preview
     useEffect(() => {
         const loadAnnouncements = async () => {
-            const { data } = await fetchAnnouncements({
+            const response = await announcementsAPI.getAll({
                 status: "published",
                 limit: 3,
             });
-            setAnnouncements(data || []);
+            setAnnouncements(response.data || []);
         };
         loadAnnouncements();
     }, []);
