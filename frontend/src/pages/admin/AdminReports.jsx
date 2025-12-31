@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Upload, 
   FileText, 
@@ -11,6 +11,9 @@ import {
   TrendingUp,
   TrendingDown
 } from 'lucide-react'
+import { formatCurrency, formatDate } from '../../utils/formatters'
+import { FormModal, Notification } from '../../components/admin'
+import { useNotification } from '../../hooks'
 
 const reportsData = [
   {
@@ -39,20 +42,19 @@ const reportsData = [
   },
 ]
 
-const summaryData = {
-  totalBudget: '₱500,000.00',
-  spent: '₱325,450.00',
-  remaining: '₱174,550.00',
-  utilizationRate: '65%',
-}
-
 export default function AdminReports() {
   const [reports, setReports] = useState(reportsData)
   const [showUpload, setShowUpload] = useState(false)
+  const { notification, showSuccess, showError, dismiss } = useNotification()
 
   const handleDelete = (id) => {
-    if (confirm('Are you sure you want to delete this report?')) {
+    if (!confirm('Are you sure you want to delete this report?')) return
+    
+    try {
       setReports(reports.filter(r => r.id !== id))
+      showSuccess('Report deleted successfully!')
+    } catch (err) {
+      showError('Failed to delete report')
     }
   }
 
@@ -82,7 +84,7 @@ export default function AdminReports() {
             </div>
           </div>
           <p className="text-sm text-school-grey-500 mb-1">Total Budget</p>
-          <p className="text-2xl font-bold text-school-grey-800">{summaryData.totalBudget}</p>
+          <p className="text-2xl font-bold text-school-grey-800">{formatCurrency(500000)}</p>
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-school-grey-100">
@@ -92,7 +94,7 @@ export default function AdminReports() {
             </div>
           </div>
           <p className="text-sm text-school-grey-500 mb-1">Total Spent</p>
-          <p className="text-2xl font-bold text-school-grey-800">{summaryData.spent}</p>
+          <p className="text-2xl font-bold text-school-grey-800">{formatCurrency(325450)}</p>
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-school-grey-100">
@@ -102,7 +104,7 @@ export default function AdminReports() {
             </div>
           </div>
           <p className="text-sm text-school-grey-500 mb-1">Remaining</p>
-          <p className="text-2xl font-bold text-school-grey-800">{summaryData.remaining}</p>
+          <p className="text-2xl font-bold text-school-grey-800">{formatCurrency(174550)}</p>
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-school-grey-100">
@@ -112,7 +114,7 @@ export default function AdminReports() {
             </div>
           </div>
           <p className="text-sm text-school-grey-500 mb-1">Utilization</p>
-          <p className="text-2xl font-bold text-school-grey-800">{summaryData.utilizationRate}</p>
+          <p className="text-2xl font-bold text-school-grey-800">65%</p>
         </div>
       </div>
 
@@ -142,7 +144,7 @@ export default function AdminReports() {
                       <span className="px-2 py-0.5 bg-school-grey-100 rounded-full">{report.type}</span>
                       <span className="flex items-center">
                         <Calendar className="w-3 h-3 mr-1" />
-                        {report.date}
+                        {formatDate(report.date)}
                       </span>
                       <span>{report.size}</span>
                     </div>
@@ -169,56 +171,59 @@ export default function AdminReports() {
       </div>
 
       {/* Upload Modal */}
-      {showUpload && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full p-6"
-          >
-            <h2 className="text-xl font-bold text-school-grey-800 mb-6">Upload Report</h2>
-            
-            <div className="border-2 border-dashed border-school-grey-200 rounded-xl p-8 text-center mb-6">
-              <Upload className="w-12 h-12 text-school-grey-400 mx-auto mb-4" />
-              <p className="text-school-grey-600 mb-2">Drag and drop your file here</p>
-              <p className="text-sm text-school-grey-400">or click to browse</p>
-              <input type="file" className="hidden" />
-            </div>
+      <FormModal
+        isOpen={showUpload}
+        onClose={() => setShowUpload(false)}
+        title="Upload Report"
+      >
+        <div className="space-y-6">
+          <div className="border-2 border-dashed border-school-grey-200 rounded-xl p-8 text-center">
+            <Upload className="w-12 h-12 text-school-grey-400 mx-auto mb-4" />
+            <p className="text-school-grey-600 mb-2">Drag and drop your file here</p>
+            <p className="text-sm text-school-grey-400">or click to browse</p>
+            <input type="file" className="hidden" />
+          </div>
 
-            <div className="space-y-4 mb-6">
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Report Title</label>
-                <input
-                  type="text"
-                  placeholder="Enter report title"
-                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-school-grey-700 mb-2">Type</label>
-                <select className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl">
-                  <option>Financial</option>
-                  <option>Budget</option>
-                  <option>Expense</option>
-                  <option>Annual</option>
-                </select>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-school-grey-700 mb-2">Report Title</label>
+              <input
+                type="text"
+                placeholder="Enter report title"
+                className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+              />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-school-grey-700 mb-2">Type</label>
+              <select className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red">
+                <option>Financial</option>
+                <option>Budget</option>
+                <option>Expense</option>
+                <option>Annual</option>
+              </select>
+            </div>
+          </div>
 
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setShowUpload(false)}
-                className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200"
-              >
-                Cancel
-              </button>
-              <button className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600">
-                Upload
-              </button>
-            </div>
-          </motion.div>
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              onClick={() => setShowUpload(false)}
+              className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors">
+              Upload
+            </button>
+          </div>
         </div>
-      )}
+      </FormModal>
+
+      {/* Notification Toast */}
+      <AnimatePresence>
+        {notification && (
+          <Notification notification={notification} onDismiss={dismiss} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -1,19 +1,13 @@
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
   Edit, 
-  Trash2, 
-  Save,
-  X,
-  ChevronDown,
-  ChevronUp,
+  Trash2,
   User,
   Building,
-  GraduationCap,
   Users,
-  AlertCircle,
-  GripVertical
+  AlertCircle
 } from 'lucide-react'
 import {
   DndContext,
@@ -27,19 +21,18 @@ import {
   arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
-  useSortable,
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
 import LoadingSpinner from '../../components/LoadingSpinner'
 import { useOfficers, useCommittees, useNotification } from '../../hooks'
+import { Notification, FormModal, DragDropCard, SectionHeader } from '../../components/admin'
 
 export default function AdminOrgChart() {
   // Custom hooks for data management
   const executiveOfficers = useOfficers('executive')
   const legislativeOfficers = useOfficers('legislative')
   const committeesHook = useCommittees()
-  const { notification, showSuccess, showError } = useNotification()
+  const { notification, showSuccess, showError, showInfo, dismiss } = useNotification()
 
   // UI State
   const [expandedSection, setExpandedSection] = useState('executive')
@@ -94,26 +87,12 @@ export default function AdminOrgChart() {
     if (!confirm('Are you sure you want to delete this item?')) return
 
     try {
-      let result
-      if (section === 'committees') {
-        result = await deleteCommittee(id)
-      } else {
-        result = await deleteOfficer(id)
-      }
-
-      if (result.error) throw new Error(result.error)
-
-      // Update local state
-      setData({
-        ...data,
-        [section]: data[section].filter(item => item.id !== id)
-      })
-      
-      showNotification('Item deleted successfully!', 'success')
+      const hook = getHookForSection(section)
+      await hook.remove(id)
+      showSuccess('Item deleted successfully!')
     } catch (err) {
       console.error('Error deleting:', err)
-      const errorMsg = err.message || err.toString() || 'An unknown error occurred'
-      showNotification(`Error: ${errorMsg}`, 'error')
+      showError(err.message || 'Failed to delete item')
     }
   }
 
@@ -121,7 +100,7 @@ export default function AdminOrgChart() {
     e.preventDefault()
     
     try {
-      let result
+      const hook = getHookForSection(editingSection)
       
       if (editingSection === 'committees') {
         const committeeData = {
@@ -132,9 +111,9 @@ export default function AdminOrgChart() {
         }
 
         if (editingItem) {
-          result = await updateCommittee(editingItem.id, committeeData)
+          await hook.update(editingItem.id, committeeData)
         } else {
-          result = await createCommittee(committeeData)
+          await hook.create(committeeData)
         }
       } else {
         // Executive or Legislative officer
@@ -147,28 +126,17 @@ export default function AdminOrgChart() {
         }
 
         if (editingItem) {
-          result = await updateOfficer(editingItem.id, officerData)
+          await hook.update(editingItem.id, officerData)
         } else {
-          result = await createOfficer(officerData)
+          await hook.create(officerData)
         }
       }
 
-      if (result.error) {
-        // Extract error message from various formats
-        const errorMsg = typeof result.error === 'string' 
-          ? result.error 
-          : result.error.message || JSON.stringify(result.error)
-        throw new Error(errorMsg)
-      }
-
-      // Reload data
-      await loadAllData()
-      showNotification(`${editingItem ? 'Updated' : 'Created'} successfully!`, 'success')
+      showSuccess(`${editingItem ? 'Updated' : 'Created'} successfully!`)
       resetForm()
     } catch (err) {
       console.error('Error saving:', err)
-      const errorMsg = err.message || err.toString() || 'An unknown error occurred'
-      showNotification(`Error: ${errorMsg}`, 'error')
+      showError(err.message || 'Failed to save changes')
     }
   }
 
@@ -235,96 +203,14 @@ export default function AdminOrgChart() {
           </div>
           <p className="text-school-grey-600 text-sm">{error}</p>
           <button
-            onClick={loadAllData}
+            onClick={() => {
+              executiveOfficers.reload()
+              legislativeOfficers.reload()
+              committeesHook.reload()
+            }}
             className="mt-4 px-4 py-2 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors"
           >
             Retry
-          </button>
-        </div>
-      </div>
-    )
-  }
-
-  const SectionHeader = ({ title, icon: Icon, section, color }) => (
-    <button
-      onClick={() => setExpandedSection(expandedSection === section ? '' : section)}
-      className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-school-grey-100 hover:border-university-red/30 transition-colors"
-    >
-      <div className="flex items-center space-x-3">
-        <div className={`w-10 h-10 ${color} rounded-xl flex items-center justify-center`}>
-          <Icon className="w-5 h-5 text-white" />
-        </div>
-        <span className="font-semibold text-school-grey-800">{title}</span>
-      </div>
-      {expandedSection === section ? (
-        <ChevronUp className="w-5 h-5 text-school-grey-400" />
-      ) : (
-        <ChevronDown className="w-5 h-5 text-school-grey-400" />
-      )}
-    </button>
-  )
-
-  // Sortable Officer Card Component
-  const SortableOfficerCard = ({ member, section, color }) => {
-    const {
-      attributes,
-      listeners,
-      setNodeRef,
-      transform,
-      transition,
-      isDragging,
-    } = useSortable({ id: member.id })
-
-    const style = {
-      transform: CSS.Transform.toString(transform),
-      transition,
-      opacity: isDragging ? 0.5 : 1,
-    }
-
-    return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className={`bg-school-grey-50 rounded-xl p-4 text-center relative ${
-          isDragging ? 'shadow-lg ring-2 ring-university-red' : ''
-        }`}
-      >
-        {/* Drag Handle */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute top-2 left-2 p-1 cursor-grab active:cursor-grabbing hover:bg-school-grey-200 rounded transition-colors"
-        >
-          <GripVertical className="w-4 h-4 text-school-grey-400" />
-        </div>
-
-        <img 
-          src={member.image_url || member.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'} 
-          alt={member.name}
-          className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
-        />
-        <h3 className="font-semibold text-school-grey-800">{member.name}</h3>
-        <p className={`text-sm font-medium ${color === 'bg-university-red' ? 'text-university-red' : 'text-blue-600'}`}>
-          {member.position}
-        </p>
-        <p className="text-xs text-school-grey-500 mt-1">{member.email}</p>
-        
-        <div className="flex justify-center space-x-2 mt-3">
-          <button
-            onClick={() => handleEdit(section, member)}
-            className={`p-2 text-school-grey-500 rounded-lg ${
-              color === 'bg-university-red' 
-                ? 'hover:text-university-red hover:bg-university-red/10' 
-                : 'hover:text-blue-600 hover:bg-blue-50'
-            }`}
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(section, member.id)}
-            className="p-2 text-school-grey-500 hover:text-red-600 hover:bg-red-50 rounded-lg"
-          >
-            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -344,7 +230,8 @@ export default function AdminOrgChart() {
         <SectionHeader 
           title="Executive Branch" 
           icon={User} 
-          section="executive" 
+          isExpanded={expandedSection === 'executive'}
+          onToggle={() => setExpandedSection(expandedSection === 'executive' ? '' : 'executive')}
           color="bg-university-red"
         />
         
@@ -355,11 +242,7 @@ export default function AdminOrgChart() {
             exit={{ opacity: 0, height: 0 }}
             className="bg-white rounded-2xl border border-school-grey-100 p-6"
           >
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-school-grey-500">
-                <GripVertical className="w-4 h-4 inline mr-1" />
-                Drag to reorder
-              </p>
+            <div className="flex justify-end mb-4">
               <button
                 onClick={() => addNew('executive')}
                 className="flex items-center space-x-2 px-4 py-2 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors"
@@ -380,12 +263,22 @@ export default function AdminOrgChart() {
               >
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {executiveOfficers.officers.map((member) => (
-                    <SortableOfficerCard
+                    <DragDropCard
                       key={member.id}
-                      member={member}
-                      section="executive"
+                      item={member}
+                      onEdit={() => handleEdit('executive', member)}
+                      onDelete={() => handleDelete('executive', member.id)}
                       color="bg-university-red"
-                    />
+                    >
+                      <img 
+                        src={member.image_url || member.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'} 
+                        alt={member.name}
+                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
+                      />
+                      <h3 className="font-semibold text-school-grey-800">{member.name}</h3>
+                      <p className="text-sm font-medium text-university-red">{member.position}</p>
+                      <p className="text-xs text-school-grey-500 mt-1">{member.email}</p>
+                    </DragDropCard>
                   ))}
                 </div>
               </SortableContext>
@@ -399,7 +292,8 @@ export default function AdminOrgChart() {
         <SectionHeader 
           title="Legislative Branch" 
           icon={Building} 
-          section="legislative" 
+          isExpanded={expandedSection === 'legislative'}
+          onToggle={() => setExpandedSection(expandedSection === 'legislative' ? '' : 'legislative')}
           color="bg-blue-500"
         />
         
@@ -409,11 +303,7 @@ export default function AdminOrgChart() {
             animate={{ opacity: 1, height: 'auto' }}
             className="bg-white rounded-2xl border border-school-grey-100 p-6"
           >
-            <div className="flex justify-between items-center mb-4">
-              <p className="text-sm text-school-grey-500">
-                <GripVertical className="w-4 h-4 inline mr-1" />
-                Drag to reorder
-              </p>
+            <div className="flex justify-end mb-4">
               <button
                 onClick={() => addNew('legislative')}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-colors"
@@ -434,12 +324,22 @@ export default function AdminOrgChart() {
               >
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {legislativeOfficers.officers.map((member) => (
-                    <SortableOfficerCard
+                    <DragDropCard
                       key={member.id}
-                      member={member}
-                      section="legislative"
+                      item={member}
+                      onEdit={() => handleEdit('legislative', member)}
+                      onDelete={() => handleDelete('legislative', member.id)}
                       color="bg-blue-500"
-                    />
+                    >
+                      <img 
+                        src={member.image_url || member.image || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150'} 
+                        alt={member.name}
+                        className="w-20 h-20 rounded-full mx-auto mb-3 object-cover"
+                      />
+                      <h3 className="font-semibold text-school-grey-800">{member.name}</h3>
+                      <p className="text-sm font-medium text-blue-600">{member.position}</p>
+                      <p className="text-xs text-school-grey-500 mt-1">{member.email}</p>
+                    </DragDropCard>
                   ))}
                 </div>
               </SortableContext>
@@ -453,7 +353,8 @@ export default function AdminOrgChart() {
         <SectionHeader 
           title="Committees" 
           icon={Users} 
-          section="committees" 
+          isExpanded={expandedSection === 'committees'}
+          onToggle={() => setExpandedSection(expandedSection === 'committees' ? '' : 'committees')}
           color="bg-green-500"
         />
         
@@ -504,156 +405,125 @@ export default function AdminOrgChart() {
       </div>
 
       {/* Editor Modal */}
-      {showEditor && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-3xl max-w-md w-full"
-          >
-            <div className="p-6 border-b border-school-grey-100 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-school-grey-800">
-                {editingItem ? 'Edit' : 'Add'} {editingSection === 'committees' ? 'Committee' : 'Officer'}
-              </h2>
-              <button
-                onClick={resetForm}
-                className="p-2 text-school-grey-500 hover:text-school-grey-700 hover:bg-school-grey-100 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {editingSection === 'committees' ? (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Committee Name</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Committee Head</label>
-                    <input
-                      type="text"
-                      value={formData.head_name}
-                      onChange={(e) => setFormData({ ...formData, head_name: e.target.value })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Number of Members</label>
-                    <input
-                      type="number"
-                      value={formData.member_count}
-                      onChange={(e) => setFormData({ ...formData, member_count: parseInt(e.target.value) })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      min="1"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Description (Optional)</label>
-                    <textarea
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      rows="3"
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      placeholder="Brief description of the committee..."
-                    />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Position</label>
-                    <input
-                      type="text"
-                      value={formData.position}
-                      onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Email</label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-school-grey-700 mb-2">Photo URL</label>
-                    <input
-                      type="url"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                      placeholder="https://example.com/photo.jpg"
-                      className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors flex items-center space-x-2"
-                >
-                  <Save className="w-4 h-4" />
-                  <span>Save</span>
-                </button>
+      <FormModal
+        isOpen={showEditor}
+        onClose={resetForm}
+        title={`${editingItem ? 'Edit' : 'Add'} ${editingSection === 'committees' ? 'Committee' : 'Officer'}`}
+      >
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {editingSection === 'committees' ? (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Committee Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  required
+                />
               </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Committee Head</label>
+                <input
+                  type="text"
+                  value={formData.head_name}
+                  onChange={(e) => setFormData({ ...formData, head_name: e.target.value })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Number of Members</label>
+                <input
+                  type="number"
+                  value={formData.member_count}
+                  onChange={(e) => setFormData({ ...formData, member_count: parseInt(e.target.value) })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  min="1"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Description (Optional)</label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows="3"
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  placeholder="Brief description of the committee..."
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Full Name</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Position</label>
+                <input
+                  type="text"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-school-grey-700 mb-2">Photo URL</label>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="https://example.com/photo.jpg"
+                  className="w-full px-4 py-3 bg-school-grey-50 border border-school-grey-200 rounded-xl focus:ring-2 focus:ring-university-red/20 focus:border-university-red"
+                />
+              </div>
+            </>
+          )}
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-6 py-3 bg-school-grey-100 text-school-grey-700 rounded-xl hover:bg-school-grey-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-6 py-3 bg-university-red text-white rounded-xl hover:bg-university-red-600 transition-colors"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      </FormModal>
 
       {/* Notification Toast */}
-      {notification && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className={`fixed top-4 right-4 z-50 px-6 py-3 rounded-xl shadow-lg flex items-center space-x-3 ${
-            notification.type === 'success' 
-              ? 'bg-green-500 text-white' 
-              : 'bg-red-500 text-white'
-          }`}
-        >
-          {notification.type === 'success' ? (
-            <Save className="w-5 h-5" />
-          ) : (
-            <AlertCircle className="w-5 h-5" />
-          )}
-          <span className="font-medium">{notification.message}</span>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {notification && (
+          <Notification notification={notification} onDismiss={dismiss} />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

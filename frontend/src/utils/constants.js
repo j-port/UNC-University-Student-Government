@@ -42,6 +42,17 @@ export const OFFICER_BRANCHES = {
     COMMITTEE: "committee",
 };
 
+// Announcement categories
+export const ANNOUNCEMENT_CATEGORIES = [
+    "Announcement",
+    "Event",
+    "Accomplishment",
+    "Alert",
+];
+
+// Announcement priorities
+export const ANNOUNCEMENT_PRIORITIES = ["low", "medium", "high"];
+
 // Feedback categories
 export const FEEDBACK_CATEGORIES = [
     { value: "academic", label: "Academic Concerns" },
