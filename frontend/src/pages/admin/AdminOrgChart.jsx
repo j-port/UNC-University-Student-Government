@@ -31,30 +31,19 @@ import {
   rectSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { 
-  fetchOfficers, 
-  fetchCommittees,
-  createOfficer,
-  updateOfficer,
-  deleteOfficer,
-  createCommittee,
-  updateCommittee,
-  deleteCommittee,
-  updateOfficersOrder
-} from '../../api'
 import LoadingSpinner from '../../components/LoadingSpinner'
+import { useOfficers, useCommittees, useNotification } from '../../hooks'
 
 export default function AdminOrgChart() {
-  const [data, setData] = useState({
-    executive: [],
-    legislative: [],
-    committees: []
-  })
+  // Custom hooks for data management
+  const executiveOfficers = useOfficers('executive')
+  const legislativeOfficers = useOfficers('legislative')
+  const committeesHook = useCommittees()
+  const { notification, showSuccess, showError } = useNotification()
+
+  // UI State
   const [expandedSection, setExpandedSection] = useState('executive')
   const [showEditor, setShowEditor] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [notification, setNotification] = useState(null)
   const [editingItem, setEditingItem] = useState(null)
   const [editingSection, setEditingSection] = useState('')
   const [formData, setFormData] = useState({
@@ -75,42 +64,15 @@ export default function AdminOrgChart() {
     })
   )
 
-  // Load all data on mount
-  useEffect(() => {
-    loadAllData()
-  }, [])
+  // Combined loading state
+  const loading = executiveOfficers.loading || legislativeOfficers.loading || committeesHook.loading
+  const error = executiveOfficers.error || legislativeOfficers.error || committeesHook.error
 
-  const loadAllData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-
-      const [execResult, legResult, committeeResult] = await Promise.all([
-        fetchOfficers('executive'),
-        fetchOfficers('legislative'),
-        fetchCommittees()
-      ])
-
-      if (execResult.error) throw new Error(execResult.error)
-      if (legResult.error) throw new Error(legResult.error)
-      if (committeeResult.error) throw new Error(committeeResult.error)
-
-      setData({
-        executive: execResult.data || [],
-        legislative: legResult.data || [],
-        committees: committeeResult.data || []
-      })
-    } catch (err) {
-      console.error('Error loading data:', err)
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
+  // Helper to get the right hook based on section
+  const getHookForSection = (section) => {
+    if (section === 'executive') return executiveOfficers
+    if (section === 'legislative') return legislativeOfficers
+    if (section === 'committees') return committeesHook
   }
 
   const handleEdit = (section, item) => {
@@ -229,34 +191,27 @@ export default function AdminOrgChart() {
 
     if (!over || active.id === over.id) return
 
-    const oldIndex = data[section].findIndex(item => item.id === active.id)
-    const newIndex = data[section].findIndex(item => item.id === over.id)
+    const hook = getHookForSection(section)
+    const items = hook.officers || hook.committees
+    
+    const oldIndex = items.findIndex(item => item.id === active.id)
+    const newIndex = items.findIndex(item => item.id === over.id)
 
     if (oldIndex === -1 || newIndex === -1) return
 
     try {
-      // Optimistically update UI
-      const newOrder = arrayMove(data[section], oldIndex, newIndex)
-      setData({
-        ...data,
-        [section]: newOrder
-      })
-
-      // Update order_index in database
-      const result = await updateOfficersOrder(newOrder)
+      const newOrder = arrayMove(items, oldIndex, newIndex)
       
-      if (result.error) {
-        // Revert on error
-        await loadAllData()
-        const errorMsg = result.error?.message || result.error?.hint || JSON.stringify(result.error) || 'Failed to update order'
-        throw new Error(errorMsg)
+      // Use hook's reorder method (optimistic update built-in)
+      if (section === 'committees') {
+        showInfo('Committee reordering not yet implemented')
+      } else {
+        await hook.reorder(newOrder)
+        showSuccess('Order updated successfully!')
       }
-
-      showNotification('Order updated successfully!', 'success')
     } catch (err) {
       console.error('Error updating order:', err)
-      const errorMsg = err.message || String(err) || 'Failed to update order'
-      showNotification(`Error: ${errorMsg}`, 'error')
+      showError(err.message || 'Failed to update order')
     }
   }
 
@@ -420,11 +375,11 @@ export default function AdminOrgChart() {
               onDragEnd={(event) => handleDragEnd(event, 'executive')}
             >
               <SortableContext
-                items={data.executive.map(m => m.id)}
+                items={executiveOfficers.officers.map(m => m.id)}
                 strategy={rectSortingStrategy}
               >
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {data.executive.map((member) => (
+                  {executiveOfficers.officers.map((member) => (
                     <SortableOfficerCard
                       key={member.id}
                       member={member}
@@ -474,11 +429,11 @@ export default function AdminOrgChart() {
               onDragEnd={(event) => handleDragEnd(event, 'legislative')}
             >
               <SortableContext
-                items={data.legislative.map(m => m.id)}
+                items={legislativeOfficers.officers.map(m => m.id)}
                 strategy={rectSortingStrategy}
               >
                 <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  {data.legislative.map((member) => (
+                  {legislativeOfficers.officers.map((member) => (
                     <SortableOfficerCard
                       key={member.id}
                       member={member}
@@ -519,7 +474,7 @@ export default function AdminOrgChart() {
             </div>
             
             <div className="space-y-3">
-              {data.committees.map((committee) => (
+              {committeesHook.committees.map((committee) => (
                 <div key={committee.id} className="flex items-center justify-between bg-school-grey-50 rounded-xl p-4">
                   <div>
                     <h3 className="font-semibold text-school-grey-800">{committee.name}</h3>
