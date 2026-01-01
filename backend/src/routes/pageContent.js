@@ -12,6 +12,17 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/page-content:
+ *   get:
+ *     tags: [Page Content]
+ *     summary: Get all page content
+ *     description: Retrieve all page content. Public endpoint.
+ *     responses:
+ *       200:
+ *         description: List of page content
+ */
 // Get all page content (public)
 router.get(
     "/",
@@ -21,6 +32,26 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/page-content/{slug}:
+ *   get:
+ *     tags: [Page Content]
+ *     summary: Get page content by slug
+ *     description: Retrieve page content for a specific page slug. Public endpoint.
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Page slug
+ *     responses:
+ *       200:
+ *         description: Page content details
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
 // Get page content by slug (public)
 router.get(
     "/:slug",
@@ -35,6 +66,33 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/page-content:
+ *   post:
+ *     tags: [Page Content]
+ *     summary: Create or update page content
+ *     description: Upsert page content by slug. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [slug, title, content]
+ *             properties:
+ *               slug:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Page content upserted
+ */
 // Create or update page content (admin only)
 router.post(
     "/",

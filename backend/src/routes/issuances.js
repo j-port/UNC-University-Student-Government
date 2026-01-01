@@ -12,6 +12,29 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/issuances:
+ *   get:
+ *     tags: [Issuances]
+ *     summary: Get all issuances
+ *     description: Retrieve all issuances with optional status filter. Public endpoint.
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Maximum number of results
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *         description: Filter by status
+ *     responses:
+ *       200:
+ *         description: List of issuances
+ */
 // Get all issuances (public)
 router.get(
     "/",
@@ -32,6 +55,27 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/issuances/{id}:
+ *   get:
+ *     tags: [Issuances]
+ *     summary: Get issuance by ID
+ *     description: Retrieve a specific issuance. Public endpoint.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Issuance ID
+ *     responses:
+ *       200:
+ *         description: Issuance details
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
 // Get single issuance (public)
 router.get(
     "/:id",
@@ -47,6 +91,34 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/issuances:
+ *   post:
+ *     tags: [Issuances]
+ *     summary: Create issuance
+ *     description: Create a new issuance. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, content, status]
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published, archived]
+ *     responses:
+ *       201:
+ *         description: Issuance created
+ */
 // Create issuance (admin only)
 router.post(
     "/",

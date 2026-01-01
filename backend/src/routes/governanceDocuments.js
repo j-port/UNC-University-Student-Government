@@ -12,6 +12,23 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/governance-documents:
+ *   get:
+ *     tags: [Governance Documents]
+ *     summary: Get all governance documents
+ *     description: Retrieve active governance documents with optional type filter. Public endpoint.
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter by document type
+ *     responses:
+ *       200:
+ *         description: List of governance documents
+ */
 // Get all governance documents (public - with optional type filter)
 router.get(
     "/",
@@ -37,6 +54,36 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/governance-documents:
+ *   post:
+ *     tags: [Governance Documents]
+ *     summary: Create governance document
+ *     description: Create a new governance document. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [title, type, content]
+ *             properties:
+ *               title:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               effective_date:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Document created
+ */
 // Create new governance document (admin only)
 router.post(
     "/",

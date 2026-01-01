@@ -12,6 +12,61 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /committees:
+ *   get:
+ *     tags: [Committees]
+ *     summary: Get all active committees
+ *     description: Retrieve all active student government committees (public access)
+ *     responses:
+ *       200:
+ *         description: List of committees
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *   post:
+ *     tags: [Committees]
+ *     summary: Create a new committee
+ *     description: Add a new committee (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - chair_name
+ *             properties:
+ *               name:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               chair_name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Committee created
+ *       400:
+ *         $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/schemas/Error'
+ *       403:
+ *         $ref: '#/components/schemas/Error'
+ */
+
 // Get all committees (public)
 router.get(
     "/",

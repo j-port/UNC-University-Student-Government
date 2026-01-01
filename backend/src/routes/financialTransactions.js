@@ -12,6 +12,35 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/financial-transactions:
+ *   get:
+ *     tags: [Financial Transactions]
+ *     summary: Get all financial transactions
+ *     description: Retrieve all financial transactions with optional search and pagination. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in description or category
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *         description: Maximum number of results
+ *     responses:
+ *       200:
+ *         description: List of financial transactions
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ */
 // Get all financial transactions (admin only - sensitive data)
 router.get(
     "/",
@@ -55,6 +84,29 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/financial-transactions/{id}:
+ *   get:
+ *     tags: [Financial Transactions]
+ *     summary: Get financial transaction by ID
+ *     description: Retrieve a specific financial transaction. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *         description: Transaction ID
+ *     responses:
+ *       200:
+ *         description: Financial transaction details
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
 // Get single transaction (admin only)
 router.get(
     "/:id",
@@ -74,6 +126,36 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/financial-transactions:
+ *   post:
+ *     tags: [Financial Transactions]
+ *     summary: Create financial transaction
+ *     description: Create a new financial transaction. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [amount, category, description, transaction_date]
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               transaction_date:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Transaction created
+ */
 // Create transaction (admin only)
 router.post(
     "/",
@@ -86,6 +168,41 @@ router.post(
     })
 );
 
+/**
+ * @swagger
+ * /api/financial-transactions/{id}:
+ *   put:
+ *     tags: [Financial Transactions]
+ *     summary: Update financial transaction
+ *     description: Update an existing financial transaction. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               amount:
+ *                 type: number
+ *               category:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Transaction updated
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ */
 // Update transaction (admin only)
 router.put(
     "/:id",

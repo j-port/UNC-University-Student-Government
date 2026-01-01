@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import morgan from "morgan";
+import swaggerUi from "swagger-ui-express";
 
 // Import utilities
 import { validateEnvironment } from "./utils/validateEnv.js";
@@ -11,6 +12,7 @@ import {
     catchAsync,
 } from "./middleware/errorHandler.js";
 import { generalLimiter } from "./middleware/rateLimiter.js";
+import { swaggerSpec } from "./config/swagger.js";
 
 // Import routes
 import feedbackRoutes from "./routes/feedback.js";
@@ -54,7 +56,44 @@ if (process.env.NODE_ENV === "development") {
 // Apply rate limiting to all routes
 app.use("/api", generalLimiter);
 
-// Health check endpoint
+// API Documentation
+app.use(
+    "/api/docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+        customCss: ".swagger-ui .topbar { display: none }",
+        customSiteTitle: "UNC Student Government API Docs",
+    })
+);
+
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check endpoint
+ *     description: Check if the API is running and database connection is working
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 message:
+ *                   type: string
+ *                   example: USG API is running
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 database:
+ *                   type: string
+ *                   example: supabase
+ */
 app.get("/api/health", (req, res) => {
     res.json({
         status: "ok",

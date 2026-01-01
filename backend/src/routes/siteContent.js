@@ -10,6 +10,23 @@ import {
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /api/site-content:
+ *   get:
+ *     tags: [Site Content]
+ *     summary: Get all site content
+ *     description: Retrieve site content with optional section filter. Public endpoint.
+ *     parameters:
+ *       - in: query
+ *         name: section
+ *         schema:
+ *           type: string
+ *         description: Filter by section name
+ *     responses:
+ *       200:
+ *         description: List of site content
+ */
 // Get all site content (public - with optional section filter)
 router.get(
     "/",
@@ -20,6 +37,33 @@ router.get(
     })
 );
 
+/**
+ * @swagger
+ * /api/site-content:
+ *   post:
+ *     tags: [Site Content]
+ *     summary: Create or update site content
+ *     description: Upsert site content by section and key. Admin only.
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [section, key, value]
+ *             properties:
+ *               section:
+ *                 type: string
+ *               key:
+ *                 type: string
+ *               value:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Site content upserted
+ */
 // Create or update site content (admin only)
 router.post(
     "/",

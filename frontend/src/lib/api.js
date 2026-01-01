@@ -1,14 +1,28 @@
+import { supabase } from "./supabaseClient";
+
 const API_BASE_URL =
     import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// Generic API request handler
+// Generic API request handler with authentication
 const apiRequest = async (endpoint, options = {}) => {
     try {
+        // Get current session token
+        const {
+            data: { session },
+        } = await supabase.auth.getSession();
+
+        const headers = {
+            "Content-Type": "application/json",
+            ...options.headers,
+        };
+
+        // Add Authorization header if user is authenticated
+        if (session?.access_token) {
+            headers.Authorization = `Bearer ${session.access_token}`;
+        }
+
         const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-            headers: {
-                "Content-Type": "application/json",
-                ...options.headers,
-            },
+            headers,
             ...options,
         });
 
@@ -21,7 +35,6 @@ const apiRequest = async (endpoint, options = {}) => {
         return data;
     } catch (error) {
         console.error(`API Error (${endpoint}):`, error);
-        ``;
         throw error;
     }
 };

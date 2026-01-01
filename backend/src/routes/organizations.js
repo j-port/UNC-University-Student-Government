@@ -12,6 +12,40 @@ import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /organizations:
+ *   get:
+ *     tags: [Organizations]
+ *     summary: Get all active organizations
+ *     description: Retrieve all active student organizations (public access)
+ *     parameters:
+ *       - in: query
+ *         name: type
+ *         schema:
+ *           type: string
+ *         description: Filter by organization type
+ *       - in: query
+ *         name: college
+ *         schema:
+ *           type: string
+ *         description: Filter by college
+ *     responses:
+ *       200:
+ *         description: List of organizations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ */
 // Get all organizations (public - with optional filters)
 router.get(
     "/",
@@ -21,6 +55,59 @@ router.get(
         res.json({ success: true, data });
     })
 );
+
+/**
+ * @swagger
+ * /organizations/{id}:
+ *   get:
+ *     tags: [Organizations]
+ *     summary: Get organization by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: Organization details
+ *       404:
+ *         $ref: '#/components/schemas/Error'
+ *   post:
+ *     tags: [Organizations]
+ *     summary: Create a new organization
+ *     description: Add a new student organization (admin only)
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: Computer Science Society
+ *               description:
+ *                 type: string
+ *               category:
+ *                 type: string
+ *               logo_url:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Organization created
+ *       400:
+ *         $ref: '#/components/schemas/ValidationError'
+ *       401:
+ *         $ref: '#/components/schemas/Error'
+ *       403:
+ *         $ref: '#/components/schemas/Error'
+ */
 
 // Get single organization by ID
 router.get(
