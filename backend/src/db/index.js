@@ -1,4 +1,7 @@
-import { supabase } from "../config/database.js";
+import {
+    createDatabaseClient,
+    getRepositoryClass,
+} from "../config/databaseFactory.js";
 import { FeedbackRepository } from "./repositories/FeedbackRepository.js";
 import { AnnouncementRepository } from "./repositories/AnnouncementRepository.js";
 import { OfficerRepository } from "./repositories/OfficerRepository.js";
@@ -13,27 +16,31 @@ import { IssuanceRepository } from "./repositories/IssuanceRepository.js";
 /**
  * Database abstraction layer
  * This provides a single interface to all repositories
- * To switch from Supabase to PostgreSQL:
- * 1. Create PostgresRepository.js extending BaseRepository
- * 2. Update this file to use PostgresRepository instead of SupabaseRepository
- * 3. Routes remain unchanged!
+ *
+ * To switch databases, simply change DB_TYPE in your .env file:
+ * - DB_TYPE=supabase (default)
+ * - DB_TYPE=postgres
+ *
+ * No code changes required!
  */
 class Database {
     constructor() {
-        // Initialize all repositories with Supabase client
-        // To switch to PostgreSQL, pass a different client here
-        this.feedback = new FeedbackRepository(supabase);
-        this.announcements = new AnnouncementRepository(supabase);
-        this.officers = new OfficerRepository(supabase);
-        this.organizations = new OrganizationRepository(supabase);
-        this.committees = new CommitteeRepository(supabase);
-        this.governanceDocuments = new GovernanceDocumentRepository(supabase);
-        this.siteContent = new SiteContentRepository(supabase);
-        this.pageContent = new PageContentRepository(supabase);
-        this.financialTransactions = new FinancialTransactionRepository(
-            supabase
-        );
-        this.issuances = new IssuanceRepository(supabase);
+        // Get database client based on environment configuration
+        const { type, client } = createDatabaseClient();
+        this.dbType = type;
+        this.client = client;
+
+        // Initialize all repositories with the appropriate client
+        this.feedback = new FeedbackRepository(client);
+        this.announcements = new AnnouncementRepository(client);
+        this.officers = new OfficerRepository(client);
+        this.organizations = new OrganizationRepository(client);
+        this.committees = new CommitteeRepository(client);
+        this.governanceDocuments = new GovernanceDocumentRepository(client);
+        this.siteContent = new SiteContentRepository(client);
+        this.pageContent = new PageContentRepository(client);
+        this.financialTransactions = new FinancialTransactionRepository(client);
+        this.issuances = new IssuanceRepository(client);
     }
 
     /**
