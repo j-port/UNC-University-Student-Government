@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "../lib/supabaseClient";
+import { siteContentAPI, pageContentAPI } from "../lib/api";
 
 /**
  * Custom hook for managing dynamic site content
- * Fetches content from site_content and page_content tables
+ * Fetches content from site_content and page_content tables via backend API
  * @returns {Object} Site content state and methods
  */
 export function useSiteContent() {
@@ -30,22 +30,15 @@ export function useSiteContent() {
             setError(null);
 
             // Fetch site_content (stats, values, achievements, features)
-            const { data: siteData, error: siteError } = await supabase
-                .from("site_content")
-                .select("*")
-                .eq("active", true)
-                .order("display_order", { ascending: true });
-
-            if (siteError) throw siteError;
+            const siteResponse = await siteContentAPI.getAll();
+            if (!siteResponse.success) throw new Error(siteResponse.error);
 
             // Fetch page_content (about, mission, vision)
-            const { data: pageData, error: pageError } = await supabase
-                .from("page_content")
-                .select("*")
-                .in("page", ["about", "home"])
-                .eq("active", true);
+            const pageResponse = await pageContentAPI.getAll();
+            if (!pageResponse.success) throw new Error(pageResponse.error);
 
-            if (pageError) throw pageError;
+            const siteData = siteResponse.data;
+            const pageData = pageResponse.data;
 
             // Transform site_content data by section
             const contentBySectionType = {

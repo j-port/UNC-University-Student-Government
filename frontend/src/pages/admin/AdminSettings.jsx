@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Save, Moon, Sun, Volume2, VolumeX, Bell, BellOff, User, Mail, Shield, Lock, Eye, EyeOff, ChevronDown } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'
-import { supabase } from '../../api'
+import { supabase } from '../../lib/supabaseClient'
 
 export default function AdminSettings() {
   const { user } = useAuth()

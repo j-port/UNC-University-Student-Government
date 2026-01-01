@@ -64,9 +64,9 @@ Before you begin, ensure you have the following installed:
 -   **Node.js** (v18 or higher) - [Download here](https://nodejs.org/)
 -   **npm** or **yarn** package manager
 -   **Git** - [Download here](https://git-scm.com/)
--   **Supabase account** - [Sign up here](https://supabase.com/)
+-   **Supabase account** - [Sign up here](https://supabase.com/) _or use PostgreSQL directly_
 
-### Installation
+### Quick Start
 
 1. **Clone the repository:**
 
@@ -75,13 +75,7 @@ git clone https://github.com/j-port/UNC-University-Student-Government.git
 cd UNC-University-Student-Government
 ```
 
-2. **Install all dependencies:**
-
-```bash
-npm run install:all
-```
-
-Or install manually:
+2. **Install dependencies:**
 
 ```bash
 # Install frontend dependencies
@@ -93,104 +87,68 @@ cd ../backend
 npm install
 ```
 
-### Frontend Setup
-
-1. Navigate to the frontend directory:
+3. **Configure environment:**
 
 ```bash
-cd frontend
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Create `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-4. Add your Supabase credentials to `.env`:
-
-```
+# Frontend (.env in frontend/)
 VITE_SUPABASE_URL=your_supabase_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+VITE_API_URL=http://localhost:5000/api
+
+# Backend (.env in backend/)
+PORT=5000
+NODE_ENV=development
+DB_TYPE=supabase
+SUPABASE_URL=your_supabase_url
+SUPABASE_SERVICE_KEY=your_service_role_key
 ```
 
-5. Start the development server:
+4. **Start development servers:**
 
 ```bash
-npm run dev
-```
-
-The frontend will be available at `http://localhost:5173`
-
-### Backend Setup
-
-1. Navigate to the backend directory:
-
-```bash
+# Terminal 1 - Backend (port 5000)
 cd backend
-```
+npm start
 
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Create `.env` file:
-
-```bash
-cp .env.example .env
-```
-
-4. Add your configuration to `.env`
-
-5. Start the development server:
-
-```bash
+# Terminal 2 - Frontend (port 3000)
+cd frontend
 npm run dev
 ```
 
-The backend API will be available at `http://localhost:5000`
+5. **Access the application:**
+    - Frontend: http://localhost:3000
+    - Backend API: http://localhost:5000/api
+    - API Documentation: http://localhost:5000/api/docs
 
-### Supabase Setup
+📚 **For detailed setup, see [docs/DATABASE_SETUP_GUIDE.md](docs/DATABASE_SETUP_GUIDE.md) and [backend/README.md](backend/README.md)**
 
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
-2. Run the **unified schema** script (`database_schema.sql`) in your Supabase SQL editor to create all tables, indexes, policies, and storage
-3. (Optional) Run `supabase_seed_data.sql` for test/mock data during development
-4. Copy your project URL and anon key to the respective `.env` files
+## 📖 Documentation
 
-📚 **See [DATABASE_SETUP_GUIDE.md](DATABASE_SETUP_GUIDE.md) for detailed setup instructions**
+All documentation is now organized in the **[docs/](docs/)** folder for easy access.
 
-**Database Tables Created:**
+### Core Documentation
 
--   `officers` - USG officers and organizational chart
--   `organizations` - Student organizations (FSOs, fraternities, etc.)
--   `committees` - USG committees
--   `announcements` - Bulletins, events, and announcements
--   `issuances` - Official documents (resolutions, reports, memoranda)
--   `governance_documents` - Constitution and bylaws
--   `feedback` - TINIG DINIG feedback system
--   `financial_transactions` - Transparency reporting
--   `site_content` - Dynamic page content (stats, values, etc.)
--   `page_content` - Full page management
+-   **[README.md](README.md)** - This file (project overview and quick start)
+-   **[CHANGELOG.md](CHANGELOG.md)** - Version history and release notes
+-   **[backend/README.md](backend/README.md)** - Backend setup and configuration
 
-### Running the Full Application
+### Complete Documentation Index
 
-You can run both frontend and backend simultaneously:
+-   **[docs/README.md](docs/README.md)** - Complete documentation index
+-   **[docs/API_DOCUMENTATION.md](docs/API_DOCUMENTATION.md)** - How to add Swagger/OpenAPI documentation
+-   **[docs/DATABASE_SETUP.md](docs/DATABASE_SETUP.md)** - Database configuration and switching (Supabase/PostgreSQL)
+-   **[docs/DATABASE_SETUP_GUIDE.md](docs/DATABASE_SETUP_GUIDE.md)** - Complete database setup guide
+-   **[docs/MIDDLEWARE_GUIDE.md](docs/MIDDLEWARE_GUIDE.md)** - Authentication, validation, and error handling
+-   **[docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md)** - Testing framework and best practices
+-   **[docs/HOMEPAGE_CONTENT_GUIDE.md](docs/HOMEPAGE_CONTENT_GUIDE.md)** - Homepage content management
+-   **[docs/TINIG_DINIG_GUIDE.md](docs/TINIG_DINIG_GUIDE.md)** - Feedback system documentation
+-   **[docs/NOTIFICATION_SYSTEM.md](docs/NOTIFICATION_SYSTEM.md)** - Notification system architecture
+-   **[docs/NOTIFICATION_TROUBLESHOOTING.md](docs/NOTIFICATION_TROUBLESHOOTING.md)** - Debug notification issues
+-   **[docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md)** - Quick reference for common tasks
 
-```bash
-# Terminal 1 - Run frontend
-npm run dev:frontend
+### Live Documentation
 
-# Terminal 2 - Run backend
-npm run dev:backend
-```
+-   **[Swagger UI](http://localhost:5000/api/docs)** - Interactive API documentation (when backend server is running)
 
 ## 🔑 Admin Access
 
@@ -219,13 +177,17 @@ Access the admin dashboard to manage announcements, feedback, and reports:
 
 -   **Node.js** - JavaScript runtime
 -   **Express.js** - Web application framework
--   **Supabase** - Backend-as-a-Service (Database, Auth, Storage)
--   **CORS** - Cross-origin resource sharing
+-   **JWT Authentication** - Token-based security
+-   **Zod** - Request validation
+-   **Swagger/OpenAPI** - API documentation
+-   **Jest** - Testing framework
+-   **Database Abstraction** - Support for Supabase and PostgreSQL
 
 ### Database
 
--   **PostgreSQL** (via Supabase) - Relational database
+-   **PostgreSQL** (via Supabase or native) - Relational database
 -   **Row Level Security** - Database-level security policies
+-   **Flexible** - Switch between Supabase and PostgreSQL with environment variable
 
 ## 📝 Features in Detail
 
@@ -250,12 +212,14 @@ Access the admin dashboard to manage announcements, feedback, and reports:
 
 ## 🔒 Security
 
+-   ✅ JWT authentication with Supabase
+-   ✅ Admin authorization (@unc.edu.ph email required)
+-   ✅ Request validation with Zod schemas
+-   ✅ Rate limiting (prevents abuse)
+-   ✅ Row Level Security (RLS) in database
 -   ✅ Environment variables for sensitive data
--   ✅ Row Level Security (RLS) in Supabase
--   ✅ Admin authentication with email verification
--   ✅ Protected admin routes with AuthContext
 -   ✅ CORS configuration for API security
--   ✅ Input validation and sanitization
+-   ✅ Centralized error handling
 
 ## 🚢 Deployment
 

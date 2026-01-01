@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-    fetchAnnouncements,
-    createAnnouncement,
-    updateAnnouncement,
-    deleteAnnouncement,
-} from "../api/announcements";
+import { announcementsAPI } from "../lib/api";
 
 /**
  * Custom hook for managing announcements
@@ -26,18 +21,20 @@ export function useAnnouncements() {
                 setError(null);
             }
 
-            const { data, error: fetchError } = await fetchAnnouncements({
-                limit: null,
-            }); // Fetch all for admin
+            const response = await announcementsAPI.getAll();
 
-            if (fetchError) {
+            if (!response.success) {
                 throw new Error(
-                    fetchError.message || "Failed to fetch announcements"
+                    response.error || "Failed to fetch announcements"
                 );
             }
 
-            console.log("Fetched announcements:", data?.length, "items");
-            setAnnouncements(data || []);
+            console.log(
+                "Fetched announcements:",
+                response.data?.length,
+                "items"
+            );
+            setAnnouncements(response.data || []);
         } catch (err) {
             // Suppress console error for expected "table not found" during development
             if (!err.message?.includes("Could not find the table")) {
@@ -61,13 +58,13 @@ export function useAnnouncements() {
     const create = useCallback(
         async (announcementData) => {
             try {
-                const { error: createError } = await createAnnouncement(
+                const response = await announcementsAPI.create(
                     announcementData
                 );
 
-                if (createError) {
+                if (!response.success) {
                     throw new Error(
-                        createError.message || "Failed to create announcement"
+                        response.error || "Failed to create announcement"
                     );
                 }
 
@@ -100,17 +97,14 @@ export function useAnnouncements() {
                 );
 
                 console.log("Updating announcement:", { id, updates });
-                const { error: updateError } = await updateAnnouncement(
-                    id,
-                    updates
-                );
+                const response = await announcementsAPI.update(id, updates);
 
-                if (updateError) {
-                    console.error("Update error:", updateError);
+                if (!response.success) {
+                    console.error("Update error:", response.error);
                     // Rollback on error
                     setAnnouncements(previousAnnouncements);
                     throw new Error(
-                        updateError.message || "Failed to update announcement"
+                        response.error || "Failed to update announcement"
                     );
                 }
 
@@ -139,13 +133,13 @@ export function useAnnouncements() {
                     prev.filter((item) => item.id !== id)
                 );
 
-                const { error: deleteError } = await deleteAnnouncement(id);
+                const response = await announcementsAPI.delete(id);
 
-                if (deleteError) {
+                if (!response.success) {
                     // Rollback on error
                     setAnnouncements(previousAnnouncements);
                     throw new Error(
-                        deleteError.message || "Failed to delete announcement"
+                        response.error || "Failed to delete announcement"
                     );
                 }
             } catch (err) {

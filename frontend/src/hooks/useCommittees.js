@@ -1,10 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-    fetchCommittees,
-    createCommittee,
-    updateCommittee,
-    deleteCommittee,
-} from "../api";
+import { committeesAPI } from "../lib/api";
 
 /**
  * Custom hook for managing committees with CRUD operations
@@ -19,13 +14,13 @@ export const useCommittees = () => {
     const load = useCallback(async () => {
         setLoading(true);
         setError(null);
-        const { data, error: fetchError } = await fetchCommittees();
+        const response = await committeesAPI.getAll();
 
-        if (fetchError) {
-            setError(fetchError.message || "Failed to fetch committees");
+        if (!response.success) {
+            setError(response.error || "Failed to fetch committees");
             setCommittees([]);
         } else {
-            setCommittees(data || []);
+            setCommittees(response.data || []);
         }
 
         setLoading(false);
@@ -38,54 +33,46 @@ export const useCommittees = () => {
 
     // Create new committee
     const create = useCallback(async (committeeData) => {
-        const { data, error: createError } = await createCommittee(
-            committeeData
-        );
+        const response = await committeesAPI.create(committeeData);
 
-        if (createError) {
-            throw new Error(
-                createError.message || "Failed to create committee"
-            );
+        if (!response.success) {
+            throw new Error(response.error || "Failed to create committee");
         }
 
         // Add to local state
-        if (data && data[0]) {
-            setCommittees((prev) => [...prev, data[0]]);
+        if (response.data) {
+            setCommittees((prev) => [...prev, response.data]);
         }
 
-        return data;
+        return response.data;
     }, []);
 
     // Update existing committee
     const update = useCallback(async (id, updates) => {
-        const { data, error: updateError } = await updateCommittee(id, updates);
+        const response = await committeesAPI.update(id, updates);
 
-        if (updateError) {
-            throw new Error(
-                updateError.message || "Failed to update committee"
-            );
+        if (!response.success) {
+            throw new Error(response.error || "Failed to update committee");
         }
 
         // Update in local state
-        if (data && data[0]) {
+        if (response.data) {
             setCommittees((prev) =>
                 prev.map((committee) =>
-                    committee.id === id ? data[0] : committee
+                    committee.id === id ? response.data : committee
                 )
             );
         }
 
-        return data;
+        return response.data;
     }, []);
 
     // Delete committee
     const remove = useCallback(async (id) => {
-        const { error: deleteError } = await deleteCommittee(id);
+        const response = await committeesAPI.delete(id);
 
-        if (deleteError) {
-            throw new Error(
-                deleteError.message || "Failed to delete committee"
-            );
+        if (!response.success) {
+            throw new Error(response.error || "Failed to delete committee");
         }
 
         // Remove from local state

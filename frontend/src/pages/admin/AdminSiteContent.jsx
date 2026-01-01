@@ -17,7 +17,7 @@ import {
     MessageSquare,
     Megaphone,
 } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
+import { siteContentAPI, pageContentAPI } from "../../lib/api";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
 // Icon options for stats and features
@@ -92,24 +92,15 @@ export default function AdminSiteContent() {
             setLoading(true);
 
             // Fetch site content
-            const { data: siteData, error: siteError } = await supabase
-                .from("site_content")
-                .select("*")
-                .order("section_type", { ascending: true })
-                .order("display_order", { ascending: true });
-
-            if (siteError) throw siteError;
+            const siteResponse = await siteContentAPI.getAll();
+            if (!siteResponse.success) throw new Error(siteResponse.error);
 
             // Fetch page content
-            const { data: pageData, error: pageError } = await supabase
-                .from("page_content")
-                .select("*")
-                .order("page", { ascending: true });
+            const pageResponse = await pageContentAPI.getAll();
+            if (!pageResponse.success) throw new Error(pageResponse.error);
 
-            if (pageError) throw pageError;
-
-            setSiteContent(siteData || []);
-            setPageContent(pageData || []);
+            setSiteContent(siteResponse.data || []);
+            setPageContent(pageResponse.data || []);
         } catch (error) {
             console.error("Error fetching content:", error);
             showNotification("Failed to load content", "error");
@@ -128,40 +119,19 @@ export default function AdminSiteContent() {
         try {
             setSaving(true);
 
-            if (item.id) {
-                // Update existing
-                const { error } = await supabase
-                    .from("site_content")
-                    .update({
-                        section_type: item.section_type,
-                        section_key: item.section_key,
-                        title: item.title,
-                        content: item.content,
-                        metadata: item.metadata,
-                        display_order: item.display_order,
-                        active: item.active,
-                    })
-                    .eq("id", item.id);
+            const response = await siteContentAPI.upsert({
+                id: item.id,
+                section_type: item.section_type,
+                section_key: item.section_key,
+                title: item.title,
+                content: item.content,
+                metadata: item.metadata,
+                display_order: item.display_order,
+                active: item.active,
+            });
 
-                if (error) throw error;
-                showNotification("Content updated successfully");
-            } else {
-                // Create new
-                const { error } = await supabase.from("site_content").insert([
-                    {
-                        section_type: item.section_type,
-                        section_key: item.section_key,
-                        title: item.title,
-                        content: item.content,
-                        metadata: item.metadata,
-                        display_order: item.display_order,
-                        active: item.active,
-                    },
-                ]);
-
-                if (error) throw error;
-                showNotification("Content created successfully");
-            }
+            if (!response.success) throw new Error(response.error);
+            showNotification(item.id ? "Content updated successfully" : "Content created successfully");
 
             fetchContent();
             setEditingItem(null);
@@ -179,36 +149,17 @@ export default function AdminSiteContent() {
         try {
             setSaving(true);
 
-            if (item.id) {
-                // Update existing
-                const { error } = await supabase
-                    .from("page_content")
-                    .update({
-                        page: item.page,
-                        section_key: item.section_key,
-                        title: item.title,
-                        content: item.content,
-                        active: item.active,
-                    })
-                    .eq("id", item.id);
+            const response = await pageContentAPI.upsert({
+                id: item.id,
+                page: item.page,
+                section_key: item.section_key,
+                title: item.title,
+                content: item.content,
+                active: item.active,
+            });
 
-                if (error) throw error;
-                showNotification("Page content updated successfully");
-            } else {
-                // Create new
-                const { error } = await supabase.from("page_content").insert([
-                    {
-                        page: item.page,
-                        section_key: item.section_key,
-                        title: item.title,
-                        content: item.content,
-                        active: item.active,
-                    },
-                ]);
-
-                if (error) throw error;
-                showNotification("Page content created successfully");
-            }
+            if (!response.success) throw new Error(response.error);
+            showNotification(item.id ? "Page content updated successfully" : "Page content created successfully");
 
             fetchContent();
             setEditingItem(null);
@@ -226,12 +177,8 @@ export default function AdminSiteContent() {
         if (!confirm("Are you sure you want to delete this item?")) return;
 
         try {
-            const { error } = await supabase
-                .from("site_content")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
+            const response = await siteContentAPI.delete(id);
+            if (!response.success) throw new Error(response.error);
             showNotification("Content deleted successfully");
             fetchContent();
         } catch (error) {
@@ -245,12 +192,8 @@ export default function AdminSiteContent() {
         if (!confirm("Are you sure you want to delete this item?")) return;
 
         try {
-            const { error } = await supabase
-                .from("page_content")
-                .delete()
-                .eq("id", id);
-
-            if (error) throw error;
+            const response = await pageContentAPI.delete(id);
+            if (!response.success) throw new Error(response.error);
             showNotification("Page content deleted successfully");
             fetchContent();
         } catch (error) {
@@ -397,7 +340,10 @@ export default function AdminSiteContent() {
                                             <SiteContentItem
                                                 key={item.id}
                                                 item={item}
-                                                onEdit={setEditingItem}
+                                                onEdit={(item) => {
+                                                    setEditingItem(item);
+                                                    setShowAddModal(false);
+                                                }}
                                                 onDelete={deleteSiteContentItem}
                                             />
                                         ))
@@ -477,7 +423,10 @@ export default function AdminSiteContent() {
                             <PageContentItem
                                 key={item.id}
                                 item={item}
-                                onEdit={setEditingItem}
+                                onEdit={(item) => {
+                                    setEditingItem(item);
+                                    setShowAddModal(false);
+                                }}
                                 onDelete={deletePageContentItem}
                             />
                         ))
@@ -641,7 +590,12 @@ function PageContentItem({ item, onEdit, onDelete }) {
 
 // Edit Modal Component
 function EditModal({ item, isNew, isSiteContent, onSave, onCancel, saving }) {
-    const [formData, setFormData] = useState(item);
+    const [formData, setFormData] = useState({
+        ...item,
+        content: item.content ?? "",
+        title: item.title ?? "",
+        section_key: item.section_key ?? "",
+    });
 
     const handleSubmit = (e) => {
         e.preventDefault();
