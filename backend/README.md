@@ -107,17 +107,15 @@ backend/
 
 ## 📚 Documentation
 
-Comprehensive guides are available in the `backend/` directory:
+All comprehensive guides are now in the **[docs/](../docs/)** folder:
 
-| Document                                             | Description                                           |
-| ---------------------------------------------------- | ----------------------------------------------------- |
-| [DATABASE_SETUP.md](DATABASE_SETUP.md)               | How to set up Supabase or PostgreSQL                  |
-| [DATABASE_MIGRATION.md](DATABASE_MIGRATION.md)       | How to migrate from Supabase to PostgreSQL            |
-| [MIDDLEWARE_GUIDE.md](MIDDLEWARE_GUIDE.md)           | How to use authentication, validation, error handling |
-| [ROUTE_MIGRATION_GUIDE.md](ROUTE_MIGRATION_GUIDE.md) | How routes were updated with middleware               |
-| [API_DOCUMENTATION.md](API_DOCUMENTATION.md)         | How to add Swagger documentation                      |
-| [TESTING_GUIDE.md](TESTING_GUIDE.md)                 | How to write and run tests                            |
-| [BACKEND_IMPROVEMENTS.md](BACKEND_IMPROVEMENTS.md)   | Summary of all improvements made                      |
+| Document                                                  | Description                                            |
+| --------------------------------------------------------- | ------------------------------------------------------ |
+| [docs/DATABASE_SETUP.md](../docs/DATABASE_SETUP.md)       | How to set up Supabase or PostgreSQL                   |
+| [docs/MIDDLEWARE_GUIDE.md](../docs/MIDDLEWARE_GUIDE.md)   | How to use authentication, validation, error handling  |
+| [docs/API_DOCUMENTATION.md](../docs/API_DOCUMENTATION.md) | How to add Swagger documentation                       |
+| [docs/TESTING_GUIDE.md](../docs/TESTING_GUIDE.md)         | How to write and run tests                             |
+| [Swagger UI](http://localhost:5000/api/docs)              | Interactive API documentation (when server is running) |
 
 ---
 

@@ -4,6 +4,95 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Added - Backend Modernization & Security (2025-01-31)
+
+#### Backend Architecture Improvements
+
+-   **Database Abstraction Layer** - Factory pattern for switching between Supabase and PostgreSQL
+    -   Created `BaseRepository` abstract class for repository pattern
+    -   Implemented `SupabaseRepository` and `PostgresRepository` concrete classes
+    -   Database switching via `DB_TYPE` environment variable (no code changes needed)
+    -   Consistent API across all 9 repository classes
+-   **Security Middleware Stack**
+    -   JWT authentication with Supabase integration
+    -   Role-based authorization (requireAdmin, optionalAuth)
+    -   Request validation using Zod schemas (20+ validators)
+    -   Rate limiting (4 configurations: general, feedback, admin, auth)
+    -   Centralized error handling with custom error classes
+-   **API Documentation**
+    -   Swagger/OpenAPI 3.0 integration
+    -   Interactive API docs at `/api/docs`
+    -   JSDoc annotations on all 11 routes
+    -   Authentication testing support in Swagger UI
+-   **Testing Framework**
+    -   Jest testing framework configured
+    -   8/8 repository tests passing
+    -   Test utilities and mocks for all repositories
+    -   ES modules support with proper configuration
+
+#### API Endpoints Enhanced
+
+All 11 routes updated with full middleware stack:
+
+-   `/api/announcements` - Announcements CRUD with validation
+-   `/api/committees` - Committee management
+-   `/api/feedback` - Feedback submission with rate limiting
+-   `/api/financialTransactions` - Financial transparency
+-   `/api/governanceDocuments` - Document management
+-   `/api/issuances` - Issuances and resolutions
+-   `/api/notifications` - Admin notifications
+-   `/api/officers` - Officer profiles
+-   `/api/organizations` - Organization management
+-   `/api/pageContent` - Dynamic page content
+-   `/api/siteContent` - Site-wide content
+
+#### Security Features
+
+-   **JWT Authentication**: All protected routes require valid Supabase JWT tokens
+-   **Admin Authorization**: Admin routes require `@unc.edu.ph` email domain
+-   **Input Validation**: All requests validated with Zod schemas before processing
+-   **Rate Limiting**:
+    -   General API: 100 requests per 15 minutes
+    -   Feedback: 5 requests per hour
+    -   Admin: 200 requests per 15 minutes
+    -   Auth: 5 requests per 15 minutes
+-   **SQL Injection Protection**: Parameterized queries in PostgreSQL repository
+-   **Error Handling**: Consistent error responses, stack traces hidden in production
+
+#### Frontend Integration
+
+-   Updated `api.js` to automatically include JWT tokens from Supabase session
+-   Authentication flow: User logs in → Frontend gets JWT → API validates JWT → Request processed
+-   All API calls now authenticated when user is logged in
+-   Seamless integration between frontend and backend security
+
+#### Documentation Updates
+
+-   Comprehensive backend README with setup instructions
+-   Middleware guide with code examples
+-   API documentation guide for adding Swagger docs
+-   Testing guide with best practices
+-   Database setup guide for both Supabase and PostgreSQL
+-   Documentation cleanup - removed 5 redundant temporary files
+-   Updated main README with consolidated quick start guide
+-   Created comprehensive documentation index
+
+#### Developer Experience
+
+-   Environment variable validation on startup
+-   Detailed error messages in development mode
+-   Morgan HTTP request logging
+-   Jest watch mode for test-driven development
+-   ES modules throughout (modern JavaScript)
+-   Hot reload in development with nodemon
+
+#### Bug Fixes
+
+-   Fixed repository test mocks for consistent testing
+-   Resolved frontend-backend authentication integration
+-   Fixed API response format consistency
+-   Corrected environment variable handling
+
 ### Added - Custom Hooks Refactoring & Announcements System (2025-01-31)
 
 #### Custom Hooks Architecture
