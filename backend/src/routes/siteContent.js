@@ -1,44 +1,50 @@
 import express from "express";
 import { db } from "../db/index.js";
+import { catchAsync } from "../middleware/errorHandler.js";
+import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { validate } from "../middleware/validateRequest.js";
+import {
+    upsertSiteContentSchema,
+    idParamSchema,
+} from "../middleware/validation.js";
 
 const router = express.Router();
 
-// Get all site content (with optional section filter)
-router.get("/", async (req, res) => {
-    try {
+// Get all site content (public - with optional section filter)
+router.get(
+    "/",
+    catchAsync(async (req, res) => {
         const { section } = req.query;
         const data = await db.siteContent.getAll(section);
         res.json({ success: true, data });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
 
-// Create or update site content
-router.post("/", async (req, res) => {
-    try {
-        console.log(
-            "Upserting site content:",
-            req.body.id ? `UPDATE ID: ${req.body.id}` : "CREATE NEW"
-        );
+// Create or update site content (admin only)
+router.post(
+    "/",
+    authenticate,
+    requireAdmin,
+    validate(upsertSiteContentSchema),
+    catchAsync(async (req, res) => {
         const data = await db.siteContent.upsert(req.body);
-        console.log("Upsert result:", data);
         res.json({ success: true, data });
-    } catch (error) {
-        console.error("Upsert error:", error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
 
-// Delete site content
-router.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.siteContent.delete(id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+// Delete site content (admin only)
+router.delete(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(idParamSchema),
+    catchAsync(async (req, res) => {
+        await db.siteContent.delete(req.params.id);
+        res.json({
+            success: true,
+            message: "Site content deleted successfully",
+        });
+    })
+);
 
 export default router;

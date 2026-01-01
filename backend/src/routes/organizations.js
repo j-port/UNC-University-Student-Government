@@ -1,38 +1,84 @@
 import express from "express";
 import { db } from "../db/index.js";
+import { catchAsync } from "../middleware/errorHandler.js";
+import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { validate } from "../middleware/validateRequest.js";
+import {
+    createOrganizationSchema,
+    updateOrganizationSchema,
+    idParamSchema,
+} from "../middleware/validation.js";
+import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
-// Get all organizations (with optional filters)
-router.get("/", async (req, res) => {
-    try {
+// Get all organizations (public - with optional filters)
+router.get(
+    "/",
+    catchAsync(async (req, res) => {
         const { type, college } = req.query;
         const data = await db.organizations.getActive(type, college);
         res.json({ success: true, data });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
 
-// Create new organization
-router.post("/", async (req, res) => {
-    try {
+// Get single organization by ID
+router.get(
+    "/:id",
+    validate(idParamSchema),
+    catchAsync(async (req, res) => {
+        const data = await db.organizations.findById(req.params.id);
+
+        if (!data) {
+            throw new NotFoundError("Organization");
+        }
+
+        res.json({ success: true, data });
+    })
+);
+
+// Create new organization (admin only)
+router.post(
+    "/",
+    authenticate,
+    requireAdmin,
+    validate(createOrganizationSchema),
+    catchAsync(async (req, res) => {
         const data = await db.organizations.create(req.body);
-        res.json({ success: true, data });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        res.status(201).json({ success: true, data });
+    })
+);
 
-// Update organization
-router.put("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const data = await db.organizations.update(id, req.body);
+// Update organization (admin only)
+router.put(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(updateOrganizationSchema),
+    catchAsync(async (req, res) => {
+        const data = await db.organizations.update(req.params.id, req.body);
+
+        if (!data) {
+            throw new NotFoundError("Organization");
+        }
+
         res.json({ success: true, data });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
+
+// Delete organization (admin only)
+router.delete(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(idParamSchema),
+    catchAsync(async (req, res) => {
+        await db.organizations.delete(req.params.id);
+        res.json({
+            success: true,
+            message: "Organization deleted successfully",
+        });
+    })
+);
 
 export default router;

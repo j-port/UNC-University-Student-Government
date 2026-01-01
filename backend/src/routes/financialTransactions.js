@@ -1,11 +1,23 @@
 import express from "express";
 import { db } from "../db/index.js";
+import { catchAsync } from "../middleware/errorHandler.js";
+import { authenticate, requireAdmin } from "../middleware/auth.js";
+import { validate } from "../middleware/validateRequest.js";
+import {
+    createFinancialTransactionSchema,
+    updateFinancialTransactionSchema,
+    idParamSchema,
+} from "../middleware/validation.js";
+import { NotFoundError } from "../utils/errors.js";
 
 const router = express.Router();
 
-// Get all financial transactions with optional search
-router.get("/", async (req, res) => {
-    try {
+// Get all financial transactions (admin only - sensitive data)
+router.get(
+    "/",
+    authenticate,
+    requireAdmin,
+    catchAsync(async (req, res) => {
         const { search, limit = 50 } = req.query;
 
         let transactions;
@@ -40,52 +52,73 @@ router.get("/", async (req, res) => {
         }
 
         res.json({ success: true, data: transactions });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
 
-// Get single transaction
-router.get("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const transaction = await db.financialTransactions.findById(id);
+// Get single transaction (admin only)
+router.get(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(idParamSchema),
+    catchAsync(async (req, res) => {
+        const transaction = await db.financialTransactions.findById(
+            req.params.id
+        );
+
+        if (!transaction) {
+            throw new NotFoundError("Financial transaction");
+        }
+
         res.json({ success: true, data: transaction });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+    })
+);
 
-// Create transaction
-router.post("/", async (req, res) => {
-    try {
+// Create transaction (admin only)
+router.post(
+    "/",
+    authenticate,
+    requireAdmin,
+    validate(createFinancialTransactionSchema),
+    catchAsync(async (req, res) => {
         const transaction = await db.financialTransactions.create(req.body);
-        res.json({ success: true, data: transaction });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        res.status(201).json({ success: true, data: transaction });
+    })
+);
 
-// Update transaction
-router.put("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        const transaction = await db.financialTransactions.update(id, req.body);
-        res.json({ success: true, data: transaction });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+// Update transaction (admin only)
+router.put(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(updateFinancialTransactionSchema),
+    catchAsync(async (req, res) => {
+        const transaction = await db.financialTransactions.update(
+            req.params.id,
+            req.body
+        );
 
-// Delete transaction
-router.delete("/:id", async (req, res) => {
-    try {
-        const { id } = req.params;
-        await db.financialTransactions.delete(id);
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+        if (!transaction) {
+            throw new NotFoundError("Financial transaction");
+        }
+
+        res.json({ success: true, data: transaction });
+    })
+);
+
+// Delete transaction (admin only)
+router.delete(
+    "/:id",
+    authenticate,
+    requireAdmin,
+    validate(idParamSchema),
+    catchAsync(async (req, res) => {
+        await db.financialTransactions.delete(req.params.id);
+        res.json({
+            success: true,
+            message: "Transaction deleted successfully",
+        });
+    })
+);
 
 export default router;
