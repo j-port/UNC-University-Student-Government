@@ -1,88 +1,131 @@
-import express from 'express'
-import cors from 'cors'
-import dotenv from 'dotenv'
-import { createClient } from '@supabase/supabase-js'
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import morgan from "morgan";
+import swaggerUi from "swagger-ui-express";
 
-dotenv.config()
+// Import utilities
+import { validateEnvironment } from "./utils/validateEnv.js";
+import {
+    errorHandler,
+    notFound,
+    catchAsync,
+} from "./middleware/errorHandler.js";
+import { generalLimiter } from "./middleware/rateLimiter.js";
+import { swaggerSpec } from "./config/swagger.js";
 
-const app = express()
-const PORT = process.env.PORT || 5000
+// Import routes
+import feedbackRoutes from "./routes/feedback.js";
+import announcementRoutes from "./routes/announcements.js";
+import officerRoutes from "./routes/officers.js";
+import organizationRoutes from "./routes/organizations.js";
+import committeeRoutes from "./routes/committees.js";
+import governanceDocumentRoutes from "./routes/governanceDocuments.js";
+import siteContentRoutes from "./routes/siteContent.js";
+import pageContentRoutes from "./routes/pageContent.js";
+import statsRoutes from "./routes/stats.js";
+import notificationRoutes from "./routes/notifications.js";
+import financialTransactionRoutes from "./routes/financialTransactions.js";
+import issuanceRoutes from "./routes/issuances.js";
 
-// Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-)
+dotenv.config();
+
+// Validate environment variables before starting
+validateEnvironment();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors())
-app.use(express.json())
+app.use(cors());
+app.use(express.json({ limit: "10mb" })); // Limit request body size
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'USG API is running' })
-})
+// Logging middleware (only in development)
+if (process.env.NODE_ENV === "development") {
+    app.use(morgan("dev"));
+} else {
+    // In production, log only errors
+    app.use(
+        morgan("combined", {
+            skip: (req, res) => res.statusCode < 400,
+        })
+    );
+}
 
-// Feedback endpoints
-app.get('/api/feedback', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('feedback')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    res.json({ success: true, data })
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
-  }
-})
+// Apply rate limiting to all routes
+app.use("/api", generalLimiter);
 
-app.post('/api/feedback', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('feedback')
-      .insert([req.body])
-      .select()
-    
-    if (error) throw error
-    res.json({ success: true, data })
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
-  }
-})
+// API Documentation
+app.use(
+    "/api/docs",
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec, {
+        customCss: ".swagger-ui .topbar { display: none }",
+        customSiteTitle: "UNC Student Government API Docs",
+    })
+);
 
-// Announcements endpoints
-app.get('/api/announcements', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('announcements')
-      .select('*')
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    res.json({ success: true, data })
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
-  }
-})
+/**
+ * @swagger
+ * /health:
+ *   get:
+ *     tags: [Health]
+ *     summary: Health check endpoint
+ *     description: Check if the API is running and database connection is working
+ *     responses:
+ *       200:
+ *         description: API is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: ok
+ *                 message:
+ *                   type: string
+ *                   example: USG API is running
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                 database:
+ *                   type: string
+ *                   example: supabase
+ */
+app.get("/api/health", (req, res) => {
+    res.json({
+        status: "ok",
+        message: "USG API is running",
+        timestamp: new Date().toISOString(),
+        database: process.env.DB_TYPE,
+    });
+});
 
-app.post('/api/announcements', async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from('announcements')
-      .insert([req.body])
-      .select()
-    
-    if (error) throw error
-    res.json({ success: true, data })
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message })
-  }
-})
+// Mount routes
+app.use("/api/feedback", feedbackRoutes);
+app.use("/api/announcements", announcementRoutes);
+app.use("/api/officers", officerRoutes);
+app.use("/api/organizations", organizationRoutes);
+app.use("/api/committees", committeeRoutes);
+app.use("/api/governance-documents", governanceDocumentRoutes);
+app.use("/api/site-content", siteContentRoutes);
+app.use("/api/page-content", pageContentRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/financial-transactions", financialTransactionRoutes);
+app.use("/api/issuances", issuanceRoutes);
+
+// 404 handler - must be after all routes
+app.use(notFound);
+
+// Global error handler - must be last
+app.use(errorHandler);
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`)
-  console.log(`📊 Environment: ${process.env.NODE_ENV}`)
-})
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`💾 Database: ${process.env.DB_TYPE}`);
+});

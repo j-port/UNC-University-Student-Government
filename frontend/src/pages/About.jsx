@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import PageHeader from '../components/PageHeader'
+import LoadingSpinner from '../components/LoadingSpinner'
 import USGLogo from '../assets/USG LOGO NO BG.png'
 import { 
   Target, 
@@ -13,47 +14,39 @@ import {
   CheckCircle,
   Star
 } from 'lucide-react'
+import { useSiteContent } from '../hooks/useSiteContent'
+import { useAutomatedStats } from '../hooks/useAutomatedStats'
 
-const coreValues = [
-  { 
-    icon: Heart, 
-    title: 'Service', 
-    description: 'Dedicated to serving the student body with passion and commitment.',
-    color: 'bg-red-500'
-  },
-  { 
-    icon: Eye, 
-    title: 'Transparency', 
-    description: 'Open and honest in all our dealings and decision-making processes.',
-    color: 'bg-blue-500'
-  },
-  { 
-    icon: Users, 
-    title: 'Unity', 
-    description: 'Fostering solidarity and collaboration among all students.',
-    color: 'bg-green-500'
-  },
-  { 
-    icon: Award, 
-    title: 'Excellence', 
-    description: 'Striving for the highest standards in everything we do.',
-    color: 'bg-purple-500'
-  },
-  { 
-    icon: Lightbulb, 
-    title: 'Innovation', 
-    description: 'Embracing new ideas and creative solutions for student welfare.',
-    color: 'bg-yellow-500'
-  },
-  { 
-    icon: CheckCircle, 
-    title: 'Accountability', 
-    description: 'Taking responsibility for our actions and their outcomes.',
-    color: 'bg-indigo-500'
-  },
+// Icon mapping for dynamic core values
+const valueIconMap = {
+  Service: Heart,
+  Transparency: Eye,
+  Unity: Users,
+  Excellence: Award,
+  Innovation: Lightbulb,
+  Accountability: CheckCircle,
+}
+
+// Color mapping for core values
+const valueColorMap = {
+  Service: 'bg-red-500',
+  Transparency: 'bg-blue-500',
+  Unity: 'bg-green-500',
+  Excellence: 'bg-purple-500',
+  Innovation: 'bg-yellow-500',
+  Accountability: 'bg-indigo-500',
+}
+
+// Fallback values if database is empty
+const defaultValues = [
+  { title: 'Service', description: 'Dedicated to serving the student body with passion and commitment.' },
+  { title: 'Transparency', description: 'Open and honest in all our dealings and decision-making processes.' },
+  { title: 'Unity', description: 'Fostering solidarity and collaboration among all students.' },
+  { title: 'Excellence', description: 'Striving for the highest standards in everything we do.' },
+  { title: 'Accountability', description: 'Taking responsibility for our actions and their outcomes.' },
 ]
 
-const achievements = [
+const defaultAchievements = [
   'Successfully advocated for extended library hours',
   'Launched the TINIG DINIG feedback system',
   'Organized 50+ student events and activities',
@@ -82,33 +75,79 @@ const itemVariants = {
 }
 
 export default function About() {
+  const { content, loading } = useSiteContent()
+  const automatedStats = useAutomatedStats()
+
+  // Get dynamic content or use defaults
+  const coreValues = content.coreValues?.length > 0
+    ? content.coreValues.map(v => ({
+        title: v.title,
+        description: v.content || v.description,
+        icon: valueIconMap[v.title] || Heart,
+        color: valueColorMap[v.title] || 'bg-gray-500',
+      }))
+    : defaultValues.map(v => ({
+        ...v,
+        icon: valueIconMap[v.title] || Heart,
+        color: valueColorMap[v.title] || 'bg-gray-500',
+      }))
+
+  const achievements = content.achievements?.length > 0
+    ? content.achievements.map(a => a.content || a.title)
+    : defaultAchievements
+
+  const missionText = content.mission?.content || `To serve as the voice of the student body, advocating for their rights, 
+  welfare, and academic excellence while fostering a culture of transparency, 
+  accountability, and service in all our endeavors. We commit to creating 
+  programs and initiatives that address the diverse needs of every student.`
+
+  const visionText = content.vision?.content || `A university community where every student is empowered, heard, and 
+  represented—designing spaces for a better future through collaborative 
+  governance, meaningful engagement, and transformative leadership that 
+  inspires positive change in society.`
+
+  // Get page header content
+  const pageTitle = content.header?.title || 'University Student Government'
+  const pageSubtitle = content.header?.content || 'Designing Spaces for a Better Future - Your voice, our mission'
+
+  // Calculate student count (you can make this dynamic too)
+  const studentsRepresented = automatedStats.loading ? '15,000+' : '15,000+'
+
+  if (loading) {
+    return (
+      <main className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </main>
+    )
+  }
+
   return (
     <main>
       <PageHeader
         badge="About Us"
-        title="University Student Government"
-        subtitle="Designing Spaces for a Better Future - Your voice, our mission"
+        title={pageTitle}
+        subtitle={pageSubtitle}
       />
 
       {/* Introduction Section */}
-      <section className="bg-school-grey-50 py-16">
+      <section className="bg-school-grey-50 py-12 sm:py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               className="text-center lg:text-left"
             >
-              <div className="inline-block mb-6">
+              <div className="inline-block mb-4 sm:mb-6">
                 <img 
                   src={USGLogo} 
                   alt="USG Logo" 
-                  className="w-48 h-48 object-contain mx-auto lg:mx-0"
+                  className="w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 object-contain mx-auto lg:mx-0"
                 />
               </div>
-              <h2 className="section-title mb-4">Who We Are</h2>
-              <p className="text-school-grey-600 mb-4 leading-relaxed">
+              <h2 className="section-title mb-3 sm:mb-4 text-2xl sm:text-3xl">Who We Are</h2>
+              <p className="text-school-grey-600 mb-3 sm:mb-4 leading-relaxed text-sm sm:text-base">
                 The University Student Government (USG) is the highest governing body of the student population 
                 at the University of Nueva Caceres. Established to represent, protect, and advance the rights 
                 and welfare of every student, we serve as the bridge between the student body and the university administration.
@@ -138,11 +177,11 @@ export default function About() {
               <img 
                 src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                 alt="Students collaborating"
-                className="rounded-2xl shadow-card-hover w-full h-[400px] object-cover"
+                className="rounded-2xl shadow-card-hover w-full h-64 sm:h-80 md:h-[400px] object-cover"
               />
-              <div className="absolute -bottom-6 -left-6 bg-university-red text-white p-6 rounded-2xl shadow-lg">
-                <p className="text-4xl font-bold font-display">15,000+</p>
-                <p className="text-white/80">Students Represented</p>
+              <div className="absolute -bottom-4 sm:-bottom-6 -left-4 sm:-left-6 bg-university-red text-white p-4 sm:p-6 rounded-xl sm:rounded-2xl shadow-lg">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold font-display">{studentsRepresented}</p>
+                <p className="text-white/80 text-sm sm:text-base">Students Represented</p>
               </div>
             </motion.div>
           </div>
@@ -150,9 +189,9 @@ export default function About() {
       </section>
 
       {/* Mission & Vision */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -161,15 +200,12 @@ export default function About() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16" />
               <div className="relative">
-                <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
-                  <Target className="w-7 h-7 text-white" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                  <Target className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h3 className="font-display font-bold text-2xl mb-4">Our Mission</h3>
-                <p className="text-white/90 leading-relaxed">
-                  To serve as the voice of the student body, advocating for their rights, 
-                  welfare, and academic excellence while fostering a culture of transparency, 
-                  accountability, and service in all our endeavors. We commit to creating 
-                  programs and initiatives that address the diverse needs of every student.
+                <h3 className="font-display font-bold text-xl sm:text-2xl mb-3 sm:mb-4">Our Mission</h3>
+                <p className="text-white/90 leading-relaxed text-sm sm:text-base">
+                  {missionText}
                 </p>
               </div>
             </motion.div>
@@ -183,15 +219,12 @@ export default function About() {
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-university-red/5 rounded-full -mr-16 -mt-16" />
               <div className="relative">
-                <div className="w-14 h-14 bg-university-red-50 rounded-xl flex items-center justify-center mb-4">
-                  <Eye className="w-7 h-7 text-university-red" />
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-university-red-50 rounded-xl flex items-center justify-center mb-3 sm:mb-4">
+                  <Eye className="w-6 h-6 sm:w-7 sm:h-7 text-university-red" />
                 </div>
-                <h3 className="font-display font-bold text-2xl text-university-red mb-4">Our Vision</h3>
-                <p className="text-school-grey-700 leading-relaxed">
-                  A university community where every student is empowered, heard, and 
-                  represented—designing spaces for a better future through collaborative 
-                  governance, meaningful engagement, and transformative leadership that 
-                  inspires positive change in society.
+                <h3 className="font-display font-bold text-xl sm:text-2xl text-university-red mb-3 sm:mb-4">Our Vision</h3>
+                <p className="text-school-grey-700 leading-relaxed text-sm sm:text-base">
+                  {visionText}
                 </p>
               </div>
             </motion.div>
@@ -200,17 +233,17 @@ export default function About() {
       </section>
 
       {/* Core Values */}
-      <section className="py-16 bg-school-grey-50">
+      <section className="py-12 sm:py-16 bg-school-grey-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
-            <span className="text-university-red font-medium">What Drives Us</span>
-            <h2 className="section-title mt-2">Our Core Values</h2>
-            <p className="section-subtitle max-w-2xl mx-auto">
+            <span className="text-university-red font-medium text-sm sm:text-base">What Drives Us</span>
+            <h2 className="section-title mt-2 text-2xl sm:text-3xl">Our Core Values</h2>
+            <p className="section-subtitle max-w-2xl mx-auto text-sm sm:text-base">
               These principles guide every decision we make and every action we take in service of the student body.
             </p>
           </motion.div>
@@ -220,7 +253,7 @@ export default function About() {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
-            className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {coreValues.map((value) => (
               <motion.div
@@ -229,10 +262,10 @@ export default function About() {
                 whileHover={{ y: -5 }}
                 className="card group"
               >
-                <div className={`w-14 h-14 ${value.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
-                  <value.icon className="w-7 h-7 text-white" />
+                <div className={`w-12 h-12 sm:w-14 sm:h-14 ${value.color} rounded-xl flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform`}>
+                  <value.icon className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                 </div>
-                <h3 className="font-display font-semibold text-lg text-school-grey-800 mb-2">
+                <h3 className="font-display font-semibold text-base sm:text-lg text-school-grey-800 mb-2">
                   {value.title}
                 </h3>
                 <p className="text-school-grey-600 text-sm">
@@ -245,9 +278,9 @@ export default function About() {
       </section>
 
       {/* Achievements */}
-      <section className="py-16 bg-white">
+      <section className="py-12 sm:py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -256,7 +289,7 @@ export default function About() {
               <img 
                 src="https://images.unsplash.com/photo-1529070538774-1843cb3265df?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
                 alt="Student achievements"
-                className="rounded-2xl shadow-card-hover w-full h-[400px] object-cover"
+                className="rounded-2xl shadow-card-hover w-full h-64 sm:h-80 md:h-[400px] object-cover"
               />
             </motion.div>
 
@@ -265,9 +298,9 @@ export default function About() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <span className="text-university-red font-medium">Our Impact</span>
-              <h2 className="section-title mt-2 mb-6">Recent Achievements</h2>
-              <div className="space-y-4">
+              <span className="text-university-red font-medium text-sm sm:text-base">Our Impact</span>
+              <h2 className="section-title mt-2 mb-4 sm:mb-6 text-2xl sm:text-3xl">Recent Achievements</h2>
+              <div className="space-y-3 sm:space-y-4">
                 {achievements.map((achievement, index) => (
                   <motion.div
                     key={index}
@@ -277,10 +310,10 @@ export default function About() {
                     transition={{ delay: index * 0.1 }}
                     className="flex items-start space-x-3"
                   >
-                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Star className="w-4 h-4 text-green-600" />
+                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <Star className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                     </div>
-                    <p className="text-school-grey-700">{achievement}</p>
+                    <p className="text-school-grey-700 text-sm sm:text-base">{achievement}</p>
                   </motion.div>
                 ))}
               </div>
@@ -290,19 +323,19 @@ export default function About() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-university-red relative overflow-hidden">
+      <section className="py-12 sm:py-16 bg-university-red relative overflow-hidden">
         <motion.div
           initial={{ scale: 0 }}
           whileInView={{ scale: 1 }}
           viewport={{ once: true }}
-          className="absolute -top-20 -right-20 w-96 h-96 bg-white/10 rounded-full"
+          className="absolute -top-20 -right-20 w-64 sm:w-96 h-64 sm:h-96 bg-white/10 rounded-full"
         />
         <motion.div
           initial={{ scale: 0 }}
           whileInView={{ scale: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="absolute -bottom-32 -left-32 w-[500px] h-[500px] bg-white/5 rounded-full"
+          className="absolute -bottom-32 -left-32 w-80 sm:w-[500px] h-80 sm:h-[500px] bg-white/5 rounded-full"
         />
         
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -311,28 +344,28 @@ export default function About() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
           >
-            <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-6">
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 sm:mb-6">
               Be Part of the Change
             </h2>
-            <p className="text-lg text-white/80 mb-8 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-white/80 mb-6 sm:mb-8 max-w-2xl mx-auto">
               Whether you want to share your ideas, join a committee, or simply stay informed, 
               there are many ways to get involved with your student government.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to="/feedback">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+              <Link to="/feedback" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-white text-university-red px-8 py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
+                  className="w-full sm:w-auto bg-white text-university-red px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
                   Share Your Voice
                 </motion.button>
               </Link>
-              <Link to="/governance/org-chart">
+              <Link to="/governance/org-chart" className="w-full sm:w-auto">
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-white/10 text-white border-2 border-white px-8 py-4 rounded-xl font-semibold hover:bg-white/20 transition-all"
+                  className="w-full sm:w-auto bg-white/10 text-white border-2 border-white px-6 sm:px-8 py-3 sm:py-4 rounded-xl font-semibold hover:bg-white/20 transition-all"
                 >
                   Meet Our Leaders
                 </motion.button>
