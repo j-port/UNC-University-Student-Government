@@ -39,6 +39,16 @@ const apiRequest = async (endpoint, options = {}) => {
     }
 };
 
+// Safe API request that returns a default value on failure (for public read operations)
+const safeApiRequest = async (endpoint, defaultValue = { success: true, data: [] }) => {
+    try {
+        return await apiRequest(endpoint);
+    } catch (error) {
+        console.warn(`API request failed for ${endpoint}, returning default value`);
+        return defaultValue;
+    }
+};
+
 // Feedback API
 export const feedbackAPI = {
     getAll: () => apiRequest("/feedback"),
@@ -66,7 +76,7 @@ export const feedbackAPI = {
 
 // Announcements API
 export const announcementsAPI = {
-    getAll: () => apiRequest("/announcements"),
+    getAll: () => safeApiRequest("/announcements"),
 
     create: (announcementData) =>
         apiRequest("/announcements", {
@@ -90,7 +100,7 @@ export const announcementsAPI = {
 export const officersAPI = {
     getAll: (branch = null) => {
         const query = branch ? `?branch=${branch}` : "";
-        return apiRequest(`/officers${query}`);
+        return safeApiRequest(`/officers${query}`);
     },
 
     create: (officerData) =>
@@ -118,7 +128,7 @@ export const organizationsAPI = {
         if (filters.type) params.append("type", filters.type);
         if (filters.college) params.append("college", filters.college);
         const query = params.toString() ? `?${params.toString()}` : "";
-        return apiRequest(`/organizations${query}`);
+        return safeApiRequest(`/organizations${query}`);
     },
 
     create: (orgData) =>
@@ -141,7 +151,7 @@ export const organizationsAPI = {
 
 // Committees API
 export const committeesAPI = {
-    getAll: () => apiRequest("/committees"),
+    getAll: () => safeApiRequest("/committees"),
 
     create: (committeeData) =>
         apiRequest("/committees", {
@@ -165,7 +175,7 @@ export const committeesAPI = {
 export const governanceDocsAPI = {
     getAll: (type = null) => {
         const query = type ? `?type=${type}` : "";
-        return apiRequest(`/governance-documents${query}`);
+        return safeApiRequest(`/governance-documents${query}`);
     },
 
     create: (docData) =>
@@ -190,7 +200,7 @@ export const governanceDocsAPI = {
 export const siteContentAPI = {
     getAll: (section = null) => {
         const query = section ? `?section=${section}` : "";
-        return apiRequest(`/site-content${query}`);
+        return safeApiRequest(`/site-content${query}`);
     },
 
     upsert: (contentData) =>
@@ -207,9 +217,9 @@ export const siteContentAPI = {
 
 // Page Content API
 export const pageContentAPI = {
-    getAll: () => apiRequest("/page-content"),
+    getAll: () => safeApiRequest("/page-content"),
 
-    getBySlug: (slug) => apiRequest(`/page-content/${slug}`),
+    getBySlug: (slug) => safeApiRequest(`/page-content/${slug}`, { success: true, data: null }),
 
     upsert: (contentData) =>
         apiRequest("/page-content", {
@@ -225,7 +235,7 @@ export const pageContentAPI = {
 
 // Stats API
 export const statsAPI = {
-    getAutomated: () => apiRequest("/stats/automated"),
+    getAutomated: () => safeApiRequest("/stats/automated", { success: true, data: { accomplishmentsCount: 0, totalBudget: 0 } }),
 };
 
 // Notifications API
@@ -273,10 +283,10 @@ export const issuancesAPI = {
         if (limit) params.append("limit", limit);
         if (status) params.append("status", status);
         const query = params.toString() ? `?${params.toString()}` : "";
-        return apiRequest(`/issuances${query}`);
+        return safeApiRequest(`/issuances${query}`);
     },
 
-    getById: (id) => apiRequest(`/issuances/${id}`),
+    getById: (id) => safeApiRequest(`/issuances/${id}`, { success: true, data: null }),
 
     create: (issuanceData) =>
         apiRequest("/issuances", {
