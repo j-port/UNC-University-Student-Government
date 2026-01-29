@@ -1,0 +1,17 @@
+# Netlify configuration for UNC USG Website
+
+[build]
+  # Base directory - where the frontend code lives
+  base = "frontend/"
+
+  # Build command
+  command = "npm install && npm run build"
+
+  # Directory containing the built files (relative to base)
+  publish = "dist"
+
+# Redirect all requests to index.html for SPA routing
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
